@@ -1,4 +1,5 @@
 #include "decode.hpp"
+#include "logger.hpp"
 #include <cassert>
 #include <stdexcept>
 
@@ -15,7 +16,7 @@ namespace toy_isa_interpreter
         2nd: [31:26] bits are zeroes, and opcode is in [5:0] bits
 */
 
-static enum Opcode GetOpcodeHighBits (Word high_opcode_bits)
+static enum Opcode GetOpcodeFromHighBits (Word high_opcode_bits)
 {
     assert (high_opcode_bits != 0);
 
@@ -44,7 +45,7 @@ static enum Opcode GetOpcodeHighBits (Word high_opcode_bits)
 
 //————————————————————————————————————————————————————————————————————————————————
 
-static enum Opcode GetOpcodeLowBits (Word low_opcode_bits)
+static enum Opcode GetOpcodeFromLowBits (Word low_opcode_bits)
 {
     enum Opcode opcode = Opcode::kUnknown;
     enum BinaryOpcodeLowBits bin_opcode = static_cast<BinaryOpcodeLowBits>(low_opcode_bits);
@@ -72,11 +73,38 @@ static enum Opcode GetOpcode (Word encoding)
 {
     Word high_opcode_bits = (encoding >> (kWordSizeInBits - kOpcodeLength));
 
+    enum Opcode opcode = Opcode::kUnknown;
+
     if (high_opcode_bits == 0) {
-        return GetOpcodeLowBits (encoding);
+        Word low_opcode_bits = (encoding & kOpcodeLowBitsMask);
+
+        opcode = GetOpcodeFromLowBits (low_opcode_bits);
+
+        LOG_TRACE_("Decode opcode {} from low bits {:06b} encoding {:032b}",
+                    static_cast<unsigned>(opcode), low_opcode_bits, encoding);    
+    }
+    else {
+        opcode = GetOpcodeFromHighBits (high_opcode_bits);
+
+        LOG_TRACE_("Decode opcode {} from high bits {:06b} encoding {:032b}",
+                    static_cast<unsigned>(opcode), high_opcode_bits, encoding);    
     }
 
-    return GetOpcodeHighBits (high_opcode_bits);
+    return opcode;
+}
+
+//--------------------------------------------------------------------------------
+
+static Word GetSyscallCode (Word encoding)
+{
+    assert (GetOpcode (encoding) == Opcode::kSyscall);
+
+    Word syscall_code = ((encoding << kOpcodeLength) >> 2 * kOpcodeLength);
+
+    LOG_TRACE_("Decode syscall code {:020b} (decimal {:d}) from encoding {:032b}",
+                syscall_code, syscall_code, encoding);
+
+    return syscall_code;
 }
 
 //————————————————————————————————————————————————————————————————————————————————
@@ -89,12 +117,13 @@ Instruction Decode (Word encoding)
 
     switch (instr.opcode_)
     {
-    case Opcode::kUnknown:
-        break;
     case Opcode::kSyscall:
+        instr.syscall_code_ = GetSyscallCode (encoding);
         break;
+
     case Opcode::kBext:
         break;
+
     case Opcode::kLd:
         break;
     case Opcode::kSt:
@@ -121,6 +150,8 @@ Instruction Decode (Word encoding)
         break;
     case Opcode::kLi:
         break;
+
+    case Opcode::kUnknown:
     default:
         break;
     }

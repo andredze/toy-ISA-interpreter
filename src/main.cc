@@ -1,7 +1,7 @@
 #include <cstdlib>
 #include <iostream>
-#include "config.hpp"
-#include "binary_code_input.hpp"
+#include "interpreter.hpp"
+#include "cpu.hpp"
 #include "error_handle.hpp"
 #include "logger.hpp"
 
@@ -23,11 +23,17 @@ int main(int argc, char** argv)
 
     //==================================================
 
-    binary_files_io::BinaryCode bin_code {}; 
+    toy_isa_interpreter::BinaryCode bin_code {}; 
 
     if (!bin_code.ReadFile (argv[1])) {
         return EXIT_FAILURE;
     }
+
+    LOG_TRACE_("Read file {}", argv[1]);
+
+    //==================================================
+
+    toy_isa_interpreter::ExecuteProgram (bin_code);
 
     //==================================================
 

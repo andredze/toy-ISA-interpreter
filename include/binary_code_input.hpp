@@ -17,7 +17,7 @@ constexpr std::size_t BINCODE_BUFFER_INIT_CAPACITY = 256;
 
 class BinaryCode
 {
-private:
+protected:
     uint8_t* buffer_;
     size_t   capacity_;
 

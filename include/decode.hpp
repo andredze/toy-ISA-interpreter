@@ -3,6 +3,7 @@
 //--------------------------------------------------------------------------------
 
 #include <cstdint>
+#include "config.hpp"
 
 //--------------------------------------------------------------------------------
 
@@ -11,10 +12,8 @@ namespace toy_isa_interpreter
 
 //--------------------------------------------------------------------------------
 
-using Word = std::uint32_t;
-
-constexpr std::size_t kWordSizeInBits = sizeof(Word) * 8;
-constexpr std::size_t kOpcodeLength   = 6;
+constexpr std::size_t kOpcodeLength      = 6;
+constexpr std::size_t kOpcodeLowBitsMask = 0b111'111;
 
 //==================================================
 
@@ -68,6 +67,9 @@ enum class BinaryOpcodeLowBits : std::uint8_t
     kBext    = 0b111001,
     kXor     = 0b111110
 };
+
+//==================================================
+
 
 //--------------------------------------------------------------------------------
 
