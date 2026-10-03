@@ -14,7 +14,7 @@ set(RELEASE_FLAGS -DNDEBUG -O3 -march=native -pie -fPIE -flto)
 set(ASAN -fstack-protector -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 )
 
-set(DEBUG_FLAGS -O0 -D _DEBUG -ggdb3 -fstrict-overflow -flto-odr-type-merging
+set(DEBUG_FLAGS -O0 "-D LOGGING" "-D _DEBUG" -ggdb3 -fstrict-overflow -flto-odr-type-merging
 			    -fno-omit-frame-pointer -pie -fPIE -fcheck-new -fsized-deallocation
 )
 
@@ -67,6 +67,7 @@ target_sources(${EXECUTABLE}
         src/execute.cc
         src/decode.cc
         src/binary_code_input.cc
+        src/interpreter.cc
 
     PUBLIC
         FILE_SET HEADERS

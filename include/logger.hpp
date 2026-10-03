@@ -106,7 +106,7 @@ public:
               const char*          location_file_name, 
               LogMode              mode,
               std::string_view     format, 
-              Args&...             args)
+              Args&&...            args)
     {
         std::string location_line = std::format (
             "{}:{}:{} | {}",
@@ -136,12 +136,21 @@ public:
 
     //==================================================
 
-#define LOG_(log_mode, fmt, ...) ak_logger::Logger::GetInstance().Log(std::source_location::current(), __FILE__, (log_mode), (fmt), ##__VA_ARGS__);
-#define LOG_DEBUG_(fmt, ...) LOG_(ak_logger::LogMode::kDEBUG, (fmt), ##__VA_ARGS__);
-#define LOG_INFO_(fmt, ...) LOG_(ak_logger::LogMode::kINFO, (fmt), ##__VA_ARGS__);
-#define LOG_WARNING_(fmt, ...) LOG_(ak_logger::LogMode::kWARNING, (fmt), ##__VA_ARGS__);
-#define LOG_ERROR_(fmt, ...) LOG_(ak_logger::LogMode::kERROR, (fmt), ##__VA_ARGS__);
-#define LOG_TRACE_(fmt, ...) LOG_(ak_logger::LogMode::kTRACE, (fmt), ##__VA_ARGS__);
+#if (!defined(NDEBUG) && defined(LOGGING))
+    #define LOG_(log_mode, fmt, ...) ak_logger::Logger::GetInstance().Log(std::source_location::current(), __FILE__, (log_mode), (fmt), ##__VA_ARGS__);
+    #define LOG_DEBUG_(fmt, ...) LOG_(ak_logger::LogMode::kDEBUG, (fmt), ##__VA_ARGS__);
+    #define LOG_INFO_(fmt, ...) LOG_(ak_logger::LogMode::kINFO, (fmt), ##__VA_ARGS__);
+    #define LOG_WARNING_(fmt, ...) LOG_(ak_logger::LogMode::kWARNING, (fmt), ##__VA_ARGS__);
+    #define LOG_ERROR_(fmt, ...) LOG_(ak_logger::LogMode::kERROR, (fmt), ##__VA_ARGS__);
+    #define LOG_TRACE_(fmt, ...) LOG_(ak_logger::LogMode::kTRACE, (fmt), ##__VA_ARGS__);
+#else
+    #define LOG_(log_mode, fmt, ...) ((void)0)
+    #define LOG_DEBUG_(fmt, ...) ((void)0)
+    #define LOG_INFO_(fmt, ...) ((void)0)
+    #define LOG_WARNING_(fmt, ...) ((void)0)
+    #define LOG_ERROR_(fmt, ...) ((void)0)
+    #define LOG_TRACE_(fmt, ...) ((void)0)
+#endif // NDEBUG
 
 };  // class Logger
 
