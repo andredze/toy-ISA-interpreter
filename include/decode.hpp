@@ -20,6 +20,7 @@ constexpr std::size_t kOpcodeLowBitsMask = 0b111'111;
 enum class Opcode : std::uint8_t
 {
     kUnknown = 0,
+
     kSyscall,
     kBext,
     kLd,
@@ -70,21 +71,49 @@ enum class BinaryOpcodeLowBits : std::uint8_t
 
 //==================================================
 
+struct FieldLocation
+{
+    uint8_t start_pos_;
+    uint8_t end_pos_;
+};
+
+//==================================================
+
+constexpr FieldLocation kSyscallCodeFieldLocation      = {6, 25};
+
+constexpr FieldLocation kFirstRegisterFieldLocation    = {21, 26};
+constexpr FieldLocation kSecondRegisterFieldLocation   = {16, 20};
+constexpr FieldLocation kThirdRegisterFieldLocation    = {11, 15};
+
+constexpr FieldLocation kBextZeroFieldLocation         = {6, 10};
+constexpr FieldLocation kLdZeroFieldLocation           = {14, 15};
+constexpr FieldLocation kStZeroFieldLocation           = {14, 15};
+constexpr FieldLocation kRoriZeroFieldLocation         = {0, 10};
+constexpr FieldLocation kSsatZeroFieldLocation         = {0, 10};
+constexpr FieldLocation kXorZeroFieldLocation          = {6, 10};
+constexpr FieldLocation kMovnZeroFieldLocation         = {6, 10};
+constexpr FieldLocation kAddZeroFieldLocation          = {6, 10};
+constexpr FieldLocation kClsZeroFieldLocation          = {6, 15};
+constexpr FieldLocation kLiZeroFieldLocation           = {21, 25};
+ 
+constexpr FieldLocation kStImmediateFieldLocation      = {0, 13};
+constexpr FieldLocation kLdImmediateFieldLocation      = {0, 13};
+constexpr FieldLocation kAddiImmediateFieldLocation    = {0, 15};
+constexpr FieldLocation kLiImmediateFieldLocation      = {0, 15};
+constexpr FieldLocation kShortImmediateFieldLocation   = {11, 15};
+
+constexpr FieldLocation kBeqOffsetFieldLocation        = {0, 15};
+constexpr FieldLocation kStpOffsetFieldLocation        = {0, 10};
+
+constexpr FieldLocation kInstructionIndexFieldLocation = {0, 25};
 
 //--------------------------------------------------------------------------------
 
 struct Instruction
 {
-    Opcode opcode_{};
-    Word src1_{};
-    Word src2_{};
-    Word dest_{};
-    Word syscall_code_{};
-    Word base_{};
-    Word offset_{};
-    Word target1_{};
-    Word target2_{};
-    Word immediate_{};
+    Opcode opcode_;
+    Byte reg1_, reg2_, reg3_;
+    Word imm_;
 };
 
 //==================================================
