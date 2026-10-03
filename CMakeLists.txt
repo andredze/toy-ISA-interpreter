@@ -7,13 +7,14 @@ option(ENABLE_SANITIZER_ADDRESS "Enable AddressSanitizer" OFF)
 set(EXECUTABLE anki_interpreter)
 add_executable(${EXECUTABLE})
 
-set(RELEASE_FLAGS -std=c++20 -DNDEBUG -O3 -march=native -pie -fPIE -flto
-)
+set(COMMON_FLAGS -fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}/= -std=c++20)
+
+set(RELEASE_FLAGS -DNDEBUG -O3 -march=native -pie -fPIE -flto)
 
 set(ASAN -fstack-protector -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 )
 
-set(DEBUG_FLAGS -std=c++20 -O0 -D _DEBUG -ggdb3 -fstrict-overflow -flto-odr-type-merging
+set(DEBUG_FLAGS -O0 -D _DEBUG -ggdb3 -fstrict-overflow -flto-odr-type-merging
 			    -fno-omit-frame-pointer -pie -fPIE -fcheck-new -fsized-deallocation
 )
 
@@ -35,12 +36,14 @@ set(WARNINGS -Wall -Wextra -Weffc++ -Wsign-conversion -Waggressive-loop-optimiza
 if (DEBUG_MODE)
     target_compile_options(${EXECUTABLE}
         PRIVATE 
+            ${COMMON_FLAGS}
             ${ASAN}
             ${DEBUG_FLAGS}
             ${WARNINGS}
     )
     target_link_options(${EXECUTABLE}
         PRIVATE
+            ${COMMON_FLAGS}
             ${ASAN}
             ${DEBUG_FLAGS}
             ${WARNINGS}
@@ -48,10 +51,12 @@ if (DEBUG_MODE)
 else()
     target_compile_options(${EXECUTABLE}
         PRIVATE 
+            ${COMMON_FLAGS}
             ${RELEASE_FLAGS}
     )
     target_link_options(${EXECUTABLE}
         PRIVATE
+            ${COMMON_FLAGS}
             ${RELEASE_FLAGS}
     )
 endif()
