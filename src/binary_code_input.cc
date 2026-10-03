@@ -45,11 +45,11 @@ bool BinaryCode::ReadFile (const std::filesystem::path& file_name)
         return false;
     }
 
-    buffer_ = new char[input_file_size];
+    buffer_ = new uint8_t[input_file_size];
 
     capacity_ = static_cast<std::size_t>(input_file_size);
 
-    if (!input_file.read (buffer_, input_file_size)) {
+    if (!input_file.read (reinterpret_cast<char*>(buffer_), input_file_size)) {
         PrintError ("Failed to read file {}", file_name.string ());
         return false;
     }
@@ -57,22 +57,6 @@ bool BinaryCode::ReadFile (const std::filesystem::path& file_name)
     input_file.close ();
 
     return true;
-}
-
-//--------------------------------------------------------------------------------
-
-char* BinaryCode::GetChunkOfCode (std::size_t chunk_size)
-{
-    if (cur_pos_ + chunk_size >= capacity_) {
-        return NULL;
-    }
-
-    if (buffer_ == NULL) {
-        PrintError ("Can not reach binary code, you have to read file first");
-        return NULL;
-    }
-
-    return &buffer_[cur_pos_];
 }
 
 //--------------------------------------------------------------------------------
