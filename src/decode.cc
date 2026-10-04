@@ -166,23 +166,23 @@ static void EnsureFieldIsZero (Word encoding, FieldLocation location)
 
 //--------------------------------------------------------------------------------
 
-static Byte GetFirstFieldReg (Word encoding)
+static GPR GetFirstFieldReg (Word encoding)
 {
-    return static_cast<Byte>(GetField (encoding, kFirstRegisterFieldLocation));
+    return static_cast<GPR>(GetField (encoding, kFirstRegisterFieldLocation));
 }
 
 //--------------------------------------------------------------------------------
 
-static Byte GetSecondFieldReg (Word encoding)
+static GPR GetSecondFieldReg (Word encoding)
 {
-    return static_cast<Byte>(GetField (encoding, kSecondRegisterFieldLocation));
+    return static_cast<GPR>(GetField (encoding, kSecondRegisterFieldLocation));
 }
 
 //--------------------------------------------------------------------------------
 
-static Byte GetThirdFieldReg (Word encoding)
+static GPR GetThirdFieldReg (Word encoding)
 {
-    return static_cast<Byte>(GetField (encoding, kThirdRegisterFieldLocation));
+    return static_cast<GPR>(GetField (encoding, kThirdRegisterFieldLocation));
 }
 
 //--------------------------------------------------------------------------------
@@ -194,7 +194,7 @@ static Word GetShortImmediate (Word encoding)
 
 //————————————————————————————————————————————————————————————————————————————————
 
-Instruction CpuState::Decode (Word encoding)
+Instruction CpuState::Decode (Word encoding) const
 {
     Opcode opcode = GetOpcode (encoding);
 
@@ -309,15 +309,15 @@ Instruction CpuState::Decode (Word encoding)
         "\nDecoded an instruction:"
         "from encoding: {:032b}\n"
         "opcode = {}\n"
-        "reg1_  = {:05b}\n"
-        "reg2_  = {:05b}\n"
-        "reg3_  = {:05b}\n"
+        "reg1_  = {} {:05b}\n"
+        "reg2_  = {} {:05b}\n"
+        "reg3_  = {} {:05b}\n"
         "imm_   = {:026b}",
         encoding,
         GetStringOpcode (instr.opcode_),
-        instr.reg1_,
-        instr.reg2_,
-        instr.reg3_,
+        GetStringReg    (instr.reg1_), static_cast<uint8_t>(instr.reg1_),
+        GetStringReg    (instr.reg2_), static_cast<uint8_t>(instr.reg2_),
+        GetStringReg    (instr.reg3_), static_cast<uint8_t>(instr.reg3_),
         instr.imm_
     );
 

@@ -1,8 +1,8 @@
 #include "decode.hpp"
-#include "execute.hpp"
 #include "error_handle.hpp"
 #include "cpu.hpp"
 #include "logger.hpp"
+#include "interpreter.hpp"
 
 //————————————————————————————————————————————————————————————————————————————————
 
@@ -24,7 +24,7 @@ int ExecuteProgram (BinaryCode& bin_code)
 
     Instruction instr = cpu.Decode (encoding);
 
-    // Execute (instr);
+    cpu.Execute (instr);
 
     return 0;
 }

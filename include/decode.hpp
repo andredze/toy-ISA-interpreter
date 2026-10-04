@@ -12,6 +12,32 @@ namespace toy_isa_interpreter
 
 //--------------------------------------------------------------------------------
 
+using RegisterValue = std::uint32_t;
+
+// General Purpose Registers
+enum class GPR : std::uint8_t
+{
+    kUnknown,
+    kX0, // return value
+    kX1, // arg0
+    kX2, // arg1
+    kX3, // arg2
+    kX4, // arg3
+    kX5, // arg4
+    kX6, // arg5
+    kX7, // arg6
+    kX8, // syscall number
+    kX9,  kX10, kX11, kX12, 
+    kX13, kX14, kX15, kX16, 
+    kX17, kX18, kX19, kX20,
+    kX21, kX22, kX23, kX24,
+    kX25, kX26, kX27, kX28,
+    kX29, kX30,
+    kX31, // LR (link register, for return address)
+};
+
+//--------------------------------------------------------------------------------
+
 constexpr std::size_t kOpcodeLength      = 6;
 constexpr std::size_t kOpcodeLowBitsMask = 0b111'111;
 
@@ -20,8 +46,8 @@ constexpr std::size_t kOpcodeLowBitsMask = 0b111'111;
 enum class Opcode : std::uint8_t
 {
     kUnknown = 0,
-
     kSyscall,
+
     kBext,
     kLd,
     kSt,
@@ -112,7 +138,7 @@ constexpr FieldLocation kInstructionIndexFieldLocation = {0, 25};
 struct Instruction
 {
     Opcode opcode_{};
-    Byte reg1_{}, reg2_{}, reg3_{};
+    GPR reg1_{}, reg2_{}, reg3_{};
     Word imm_{};
 };
 

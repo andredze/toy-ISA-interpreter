@@ -3,6 +3,7 @@
 //--------------------------------------------------------------------------------
 
 #include <cstdint>
+#include <cassert>
 #include "config.hpp"
 #include "binary_code_input.hpp"
 #include "error_handle.hpp"
@@ -15,34 +16,10 @@ namespace toy_isa_interpreter
 
 //--------------------------------------------------------------------------------
 
-using Register = std::uint32_t;
-
-enum class GeneralPurposeRegisterName
-{
-    X0, // return value
-    X1, // arg0
-    X2, // arg1
-    X3, // arg2
-    X4, // arg3
-    X5, // arg4
-    X6, // arg5
-    X7, // arg6
-    X8, // syscall number
-    X9,  X10, X11, X12, 
-    X13, X14, X15, X16, 
-    X17, X18, X19, X20,
-    X21, X22, X23, X24,
-    X25, X26, X27, X28,
-    X29, X30,
-    X32, // LR (link register, for return address)
-};
-
-//--------------------------------------------------------------------------------
-
 class BinaryCode : public binary_files_io::BinaryCode
 {
 public:
-    Word GetInstructionEncoding (Register program_counter)
+    Word GetInstructionEncoding (RegisterValue program_counter)
     {
         if (program_counter >= capacity_) {
             std::string message = "Out of bounds: Program counter exceeds code capacity";
@@ -62,18 +39,43 @@ constexpr std::size_t kGeneralPurposeRegistersNumber = 32;
 
 class CpuState
 {
-    Register general_purpose_regs_[kGeneralPurposeRegistersNumber];
-    Register program_counter_;
+private:
+    RegisterValue general_purpose_regs_[kGeneralPurposeRegistersNumber];
+    RegisterValue program_counter_;
+
+    void SetRegValue (GPR reg, RegisterValue value)
+    {
+        unsigned reg_code = static_cast<unsigned>(reg);
+
+        assert (reg_code < kGeneralPurposeRegistersNumber);
+
+        general_purpose_regs_[reg_code] = value;
+    }
+
+    RegisterValue GetRegValue (GPR reg) const
+    {
+        unsigned reg_code = static_cast<unsigned>(reg);
+
+        assert (reg_code < kGeneralPurposeRegistersNumber);
+
+        return general_purpose_regs_[reg_code];
+    }
+
+    std::string GetStringReg (GPR reg) const;
+
+    void ExecuteAdd (Instruction instr);
 
 public:
     CpuState () : general_purpose_regs_{}, program_counter_(0) {};
 
-    Word Fetch (BinaryCode& code)
+    Word Fetch (BinaryCode& code) const
     {
         return code.GetInstructionEncoding (program_counter_);
     }
 
-    Instruction Decode (Word encoding);
+    Instruction Decode (Word encoding) const;
+
+    void Execute (Instruction instr);
 }; // class CPUState
 
 //--------------------------------------------------------------------------------
