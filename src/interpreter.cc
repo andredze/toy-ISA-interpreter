@@ -17,14 +17,17 @@ int ExecuteProgram (BinaryCode& bin_code)
 
     LOG_TRACE_("Fetching instruction...");
 
-    Word encoding = cpu.Fetch (bin_code);
+    while (true)
+    {
+        Word encoding = cpu.Fetch (bin_code);
 
-    LOG_TRACE_("Fetched {:032b} ({:08X})", encoding, encoding);
-    LOG_TRACE_("Decoding instruction...");
+        LOG_TRACE_("Fetched {:032b} ({:08X})", encoding, encoding);
+        LOG_TRACE_("Decoding instruction...");
 
-    Instruction instr = cpu.Decode (encoding);
+        Instruction instr = cpu.Decode (encoding);
 
-    cpu.Execute (instr);
+        cpu.Execute (instr);
+    }
 
     return 0;
 }

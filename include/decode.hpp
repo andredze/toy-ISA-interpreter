@@ -12,7 +12,11 @@ namespace toy_isa_interpreter
 
 //--------------------------------------------------------------------------------
 
-using RegisterValue = std::uint32_t;
+using GPRValue = std::int32_t;
+using PCValue  = std::uint32_t;
+
+constexpr std::size_t kBitsInByte      = 8;
+constexpr std::size_t kRegLengthInBits = sizeof(GPRValue) * kBitsInByte;
 
 // General Purpose Registers
 enum class GPR : std::uint8_t
@@ -102,6 +106,10 @@ struct FieldLocation
     uint8_t start_pos_{};
     uint8_t end_pos_{};
 };
+
+//==================================================
+
+uint8_t GetFieldWidth (FieldLocation location);
 
 //==================================================
 

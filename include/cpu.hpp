@@ -19,7 +19,7 @@ namespace toy_isa_interpreter
 class BinaryCode : public binary_files_io::BinaryCode
 {
 public:
-    Word GetInstructionEncoding (RegisterValue program_counter)
+    Word GetInstructionEncoding (PCValue program_counter)
     {
         if (program_counter >= capacity_) {
             std::string message = "Out of bounds: Program counter exceeds code capacity";
@@ -40,10 +40,12 @@ constexpr std::size_t kGeneralPurposeRegistersNumber = 32;
 class CpuState
 {
 private:
-    RegisterValue general_purpose_regs_[kGeneralPurposeRegistersNumber];
-    RegisterValue program_counter_;
+    GPRValue general_purpose_regs_[kGeneralPurposeRegistersNumber];
+    PCValue  program_counter_;
 
-    void SetRegValue (GPR reg, RegisterValue value)
+    //==================================================
+
+    void SetRegValue (GPR reg, GPRValue value)
     {
         unsigned reg_code = static_cast<unsigned>(reg);
 
@@ -52,7 +54,7 @@ private:
         general_purpose_regs_[reg_code] = value;
     }
 
-    RegisterValue GetRegValue (GPR reg) const
+    GPRValue GetRegValue (GPR reg) const
     {
         unsigned reg_code = static_cast<unsigned>(reg);
 
@@ -63,7 +65,33 @@ private:
 
     std::string GetStringReg (GPR reg) const;
 
-    void ExecuteAdd (Instruction instr);
+    PCValue GetProgramCounter () const
+    {
+        return program_counter_;
+    }
+
+    void SetProgramCounter (PCValue value)
+    {
+        program_counter_ = value;
+    }
+
+    void AdvanceProgramCounter ();
+
+    //==================================================
+
+    void ExecuteBext  (Instruction instr);
+    void ExecuteBeq   (Instruction instr);
+    void ExecuteJ     (Instruction instr);
+    void ExecuteRori  (Instruction instr);
+    void ExecuteAddi  (Instruction instr);
+    void ExecuteXor   (Instruction instr);
+    void ExecuteMovn  (Instruction instr);
+    void ExecuteSsat  (Instruction instr);
+    void ExecuteAdd   (Instruction instr);
+    void ExecuteCls   (Instruction instr);
+    void ExecuteLi    (Instruction instr);
+
+    //--------------------------------------------------------------------------------
 
 public:
     CpuState () : general_purpose_regs_{}, program_counter_(0) {};

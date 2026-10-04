@@ -55,8 +55,326 @@ std::string CpuState::GetStringReg (GPR reg) const
 
 //--------------------------------------------------------------------------------
 
+void CpuState::AdvanceProgramCounter ()
+{
+    LOG_TRACE_("\nAdvancing PC: PC = {} + 4 = {}", 
+                program_counter_, program_counter_ + 4u);
+
+    program_counter_ += 4u;
+}
+
+//--------------------------------------------------------------------------------
+
+static GPRValue GetBit (GPRValue value, int bit_index)
+{
+    return (value >> bit_index) & 1;    
+}
+
+//==================================================
+
+static GPRValue SignExtend (GPRValue source, uint8_t width)
+{
+    GPRValue result = 0;
+
+    if (GetBit (source, width - 1) == 0) {
+        result = source;
+    }
+    else {
+        // add leading ones
+        result = source | ((~0) << width);
+    }
+
+    return result;
+}
+
+//==================================================
+
+void CpuState::ExecuteBext (Instruction instr)
+{
+    // X[reg1] ← bit_extract(X[reg2], X[reg3])
+    GPR reg_data   = instr.reg2_;
+    GPR reg_mask   = instr.reg3_;
+    GPR reg_result = instr.reg1_;
+
+    auto data = GetRegValue (reg_data);
+    auto mask = GetRegValue (reg_mask);
+
+    GPRValue packed_bits = 0u;
+    
+    for (int bit_index = kRegLengthInBits - 1; bit_index >= 0; bit_index--) {
+        if (GetBit (mask, bit_index) == 1u) {
+            packed_bits <<= 1;
+            packed_bits |= (GetBit (data, bit_index));
+        }
+    }
+
+    SetRegValue (reg_result, packed_bits);
+
+    LOG_TRACE_(
+        "\nExecuting {}:\n"
+        "{} = bit_extract(data {}, mask {})\n"
+        "data {}   = {:032b}\n"
+        "mask {}   = {:032b}\n"
+        "result {} = {:032b}\n",
+        GetStringOpcode (Opcode::kBext),
+        GetStringReg (reg_result),
+        GetStringReg (reg_data),
+        GetStringReg (reg_mask),
+        GetStringReg (reg_data), data,
+        GetStringReg (reg_mask), mask,
+        GetStringReg (reg_result), packed_bits
+    );
+
+    AdvanceProgramCounter ();
+}
+
+//--------------------------------------------------------------------------------
+
+void CpuState::ExecuteBeq (Instruction instr)
+{
+    // target ← sign_extend(offset) << 2
+    // cond ← X[reg1] == X[reg2]
+    // PC ← if (cond) PC + target else PC + 4
+
+    auto value1 = GetRegValue (instr.reg1_);
+    auto value2 = GetRegValue (instr.reg2_);
+    auto offset = static_cast<GPRValue>(instr.imm_);
+
+    auto target = SignExtend (offset, GetFieldWidth (kBeqOffsetFieldLocation)) << 2;
+    bool cond   = (value1 == value2);
+
+    auto pc_value = GetProgramCounter ();
+
+    if (target < 0 && (-target) > pc_value) {
+        throw std::runtime_error ("Jump to negative address");
+    }
+
+    auto result = pc_value + target;
+
+    LOG_TRACE_(
+        "\nExecuting {}\n"
+        "target = {}\n"
+        "check condition:\n"
+        "{} with value {}\n"
+        "{} with value {}\n"
+        "cond equals = {}\n"
+        "if true: new PC = {}\n",
+        GetStringOpcode (Opcode::kBeq),
+        target,
+        GetStringReg (instr.reg1_), value1,
+        GetStringReg (instr.reg2_), value2,
+        cond,
+        result
+    );
+
+    if (cond) {
+        SetProgramCounter (result);
+    }
+    else {
+        AdvanceProgramCounter ();
+    }
+}
+
+//--------------------------------------------------------------------------------
+
+void CpuState::ExecuteJ (Instruction instr)
+{
+    // PC ← (PC & 0xF0000000) | (instr_index << 2)
+
+    auto instr_index = instr.imm_;
+
+    auto pc_value = GetProgramCounter ();
+
+    auto result = (pc_value & 0xF000'0000) | (instr_index << 2);
+
+    SetProgramCounter (result);
+
+    LOG_TRACE_(
+        "\nExecuting {}\n"
+        "PC = {} + 4 * {} = {}\n",
+        GetStringOpcode (Opcode::kJ),
+        pc_value, instr_index, result
+    );
+}
+
+//--------------------------------------------------------------------------------
+
+void CpuState::ExecuteRori (Instruction instr)
+{   
+    // X[reg1] ← rotate_right(X[reg2], imm5)
+
+    GPR reg_result = instr.reg1_;
+    GPR reg_source = instr.reg2_;
+
+    auto value = GetRegValue (reg_source);
+
+    auto rotate_count = instr.imm_;
+
+    auto result = (value >> rotate_count) | 
+                  (value << (kRegLengthInBits - rotate_count));
+    
+    SetRegValue (reg_result, result);
+
+    LOG_TRACE_(
+        "\nExecuting {}:\n"
+        "Rotating by {} bits:\n"
+        "source: {} = {:032b}\n"
+        "result: {} = {:032b}\n",
+        GetStringOpcode (Opcode::kRori),
+        rotate_count,
+        GetStringReg (reg_source), value,
+        GetStringReg (reg_result), result
+    );
+
+    AdvanceProgramCounter ();
+}
+
+//--------------------------------------------------------------------------------
+
+void CpuState::ExecuteAddi (Instruction instr)
+{   
+    // X[reg2] ← X[reg1] + sign_extend(imm)
+
+    GPR reg_result = instr.reg2_;
+    GPR reg_source = instr.reg1_;
+
+    auto value1 = GetRegValue (reg_source);
+
+    auto imm = static_cast<GPRValue>(instr.imm_);
+
+    auto sign_extended = SignExtend (imm, GetFieldWidth (kAddiImmediateFieldLocation));    
+   
+    auto result = value1 + sign_extended;
+
+    SetRegValue (reg_result, result);
+
+    LOG_TRACE_(
+        "\nExecuting {}:\n"
+        "source1: {} = {:032b}\n"
+        "imm: {:016b}\n"
+        "sign_extended_imm: {:032b}\n"
+        "result: {} = {:032b}\n",
+        GetStringOpcode (Opcode::kAddi),
+        GetStringReg (reg_source), value1,
+        imm,
+        sign_extended,
+        GetStringReg (reg_result), result
+    );
+
+    AdvanceProgramCounter ();
+}
+
+//--------------------------------------------------------------------------------
+void CpuState::ExecuteXor (Instruction instr)
+{
+    // X[reg3] ← X[reg1] ^ X[reg2]
+
+    auto value1 = GetRegValue (instr.reg1_);
+    auto value2 = GetRegValue (instr.reg2_);;
+
+    GPR reg_result = instr.reg3_;
+
+    auto result = value1 ^ value2;
+
+    SetRegValue (reg_result, result);
+
+    LOG_TRACE_(
+        "\nExecuting {}:\n"
+        "{} = {} ^ {}\n"
+        "{} = {} ^ {}",
+        GetStringOpcode (Opcode::kXor),
+        GetStringReg (reg_result),
+        GetStringReg (instr.reg1_),
+        GetStringReg (instr.reg2_),
+        result,
+        value1,
+        value2
+    );
+
+    AdvanceProgramCounter ();
+}
+
+//--------------------------------------------------------------------------------
+
+void CpuState::ExecuteMovn (Instruction instr)
+{
+    // if (X[reg2] != 0) X[reg3] ← X[reg1]
+
+    auto value      = GetRegValue (instr.reg1_);
+    auto cond_value = GetRegValue (instr.reg2_);
+
+    if (cond_value != 0) {
+        SetRegValue (instr.reg3_, value);
+    }
+
+    LOG_TRACE_(
+        "\nExecuting {}:\n"
+        "if ({} != 0) {} ← {}\n"
+        "({} ({}) != 0) is {}\n"
+        "so: {} = {}\n",
+        GetStringOpcode (Opcode::kMovn),
+        GetStringReg (instr.reg2_),
+        GetStringReg (instr.reg3_),
+        GetStringReg (instr.reg1_),
+        GetStringReg (instr.reg2_),
+        cond_value,
+        (cond_value != 0),
+        GetStringReg (instr.reg3_),
+        GetRegValue (instr.reg3_)
+    );
+
+    AdvanceProgramCounter ();
+}
+
+//--------------------------------------------------------------------------------
+
+void CpuState::ExecuteSsat (Instruction instr)
+{
+    // X[reg1] ← saturate_signed(X[reg2], imm5)
+
+    GPR reg_value  = instr.reg2_;
+    GPR reg_result = instr.reg1_;
+    
+    auto bits_count = instr.imm_;
+
+    auto max_value = (1 << bits_count) - 1;
+    auto min_value = - (1 << bits_count);
+
+    auto value = GetRegValue (reg_value);
+
+    if (value > max_value) {
+        value = max_value;
+    }
+    else if (value < min_value) {
+        value = min_value;
+    }
+
+    SetRegValue (reg_result, value);
+
+    LOG_TRACE_(
+        "\nExecuting {}:\n"
+        "bits_count = {}\n"
+        "max_value = {}\n"
+        "min_value = {}\n"
+        "value before saturation = {} (from {})\n"
+        "result value = {} = {}\n",
+        GetStringOpcode (Opcode::kSsat),
+        bits_count,
+        max_value,
+        min_value,
+        GetRegValue (reg_value), GetStringReg (reg_value),
+        value, GetStringReg (reg_result)
+    );
+
+    AdvanceProgramCounter ();
+}
+
+//--------------------------------------------------------------------------------
+
 void CpuState::ExecuteAdd (Instruction instr)
 {
+    // X[reg3] ← X[reg1] + X[reg2]
+
     auto value1 = GetRegValue (instr.reg1_);
     auto value2 = GetRegValue (instr.reg2_);
 
@@ -69,13 +387,81 @@ void CpuState::ExecuteAdd (Instruction instr)
         "{} = {} + {}\n"
         "{} = {} + {}",
         GetStringOpcode (Opcode::kAdd),
+        GetStringReg (instr.reg3_),
         GetStringReg (instr.reg1_),
         GetStringReg (instr.reg2_),
-        GetStringReg (instr.reg3_),
+        result,
         value1,
-        value2,
-        result
+        value2
     );
+
+    AdvanceProgramCounter ();
+}
+
+//--------------------------------------------------------------------------------
+
+void CpuState::ExecuteCls (Instruction instr)
+{
+    // X[reg1] ← count_leading_signs(X[reg2])
+
+    GPR reg_result = instr.reg1_;
+    GPR reg_source = instr.reg2_;
+
+    auto value = GetRegValue (reg_source);
+
+    GPRValue leading_ones_count = 0;
+
+    for (int bit_index = kRegLengthInBits - 1; bit_index >= 0; bit_index--) {
+        if (GetBit (value, bit_index) == 0) {
+            break;
+        }
+
+        leading_ones_count++;
+    }
+
+    SetRegValue (reg_result, leading_ones_count);
+
+    LOG_TRACE_(
+        "\nExecuting {}\n"
+        "source: {} = {:032b}\n"
+        "leading_ones = {}\n"
+        "write back: {} = {}\n",
+        GetStringOpcode (Opcode::kCls),
+        GetStringReg (reg_source), value,
+        leading_ones_count,
+        GetStringReg (reg_result), GetRegValue (reg_result)
+    );
+
+    AdvanceProgramCounter ();
+}
+
+//--------------------------------------------------------------------------------
+
+void CpuState::ExecuteLi (Instruction instr)
+{
+    // X[reg1] ← sign_extend(imm)
+    GPR reg = instr.reg1_;
+
+    GPRValue imm = static_cast<GPRValue>(instr.imm_);
+
+    auto imm_width = GetFieldWidth (kLiImmediateFieldLocation);
+
+    GPRValue result = SignExtend (imm, imm_width);
+
+    SetRegValue (reg, result);
+
+    LOG_TRACE_(
+        "\nExecuting {}\n"
+        "imm = {:016b}\n"
+        "result = {:032b}\n"
+        "write back: {} = {}\n",
+        GetStringOpcode (Opcode::kLi),
+        imm,
+        result,
+        GetStringReg (reg), GetRegValue (reg)
+    );
+
+    AdvanceProgramCounter ();
 }
 
 //--------------------------------------------------------------------------------
@@ -85,20 +471,20 @@ void CpuState::Execute (Instruction instr)
     switch (instr.opcode_)
     {
     case Opcode::kSyscall: break;
-    case Opcode::kBext:    break;
+    case Opcode::kBext:    ExecuteBext (instr); break;
     case Opcode::kLd:      break;
     case Opcode::kSt:      break;
-    case Opcode::kBeq:     break;
-    case Opcode::kJ:       break;
-    case Opcode::kRori:    break;
-    case Opcode::kAddi:    break;
+    case Opcode::kBeq:     ExecuteBeq  (instr); break;
+    case Opcode::kJ:       ExecuteJ    (instr); break;
+    case Opcode::kRori:    ExecuteRori (instr); break;
+    case Opcode::kAddi:    ExecuteAddi (instr); break;
     case Opcode::kStp:     break;
-    case Opcode::kXor:     break;
-    case Opcode::kMovn:    break;
-    case Opcode::kSsat:    break;
-    case Opcode::kAdd:     ExecuteAdd (instr); break;
-    case Opcode::kCls:     break;
-    case Opcode::kLi:      break;
+    case Opcode::kXor:     ExecuteXor  (instr); break;
+    case Opcode::kMovn:    ExecuteMovn (instr); break;
+    case Opcode::kSsat:    ExecuteSsat (instr); break;
+    case Opcode::kAdd:     ExecuteAdd  (instr); break;
+    case Opcode::kCls:     ExecuteCls  (instr); break;
+    case Opcode::kLi:      ExecuteLi   (instr); break;
     case Opcode::kUnknown:
     default:
         throw std::runtime_error ("Failed to execute: Unknown instruction opcode");
