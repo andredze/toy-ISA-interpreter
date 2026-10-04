@@ -6,6 +6,7 @@
 #include "config.hpp"
 #include "binary_code_input.hpp"
 #include "error_handle.hpp"
+#include "decode.hpp"
 
 //--------------------------------------------------------------------------------
 
@@ -71,6 +72,8 @@ public:
     {
         return code.GetInstructionEncoding (program_counter_);
     }
+
+    Instruction Decode (Word encoding);
 }; // class CPUState
 
 //--------------------------------------------------------------------------------

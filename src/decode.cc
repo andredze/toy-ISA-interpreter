@@ -1,4 +1,5 @@
 #include "decode.hpp"
+#include "cpu.hpp"
 #include "logger.hpp"
 #include <cassert>
 #include <stdexcept>
@@ -7,6 +8,36 @@
 
 namespace toy_isa_interpreter
 {
+
+//————————————————————————————————————————————————————————————————————————————————
+
+std::string GetStringOpcode (Opcode opcode)
+{
+    switch (opcode)
+    {
+    case Opcode::kSyscall: return "SYSCALL";
+    case Opcode::kBext:    return "BEXT";
+    case Opcode::kLd:      return "LD";
+    case Opcode::kSt:      return "ST";
+    case Opcode::kBeq:     return "BEQ";
+    case Opcode::kJ:       return "J";
+    case Opcode::kRori:    return "RORI";
+    case Opcode::kAddi:    return "ADDI";
+    case Opcode::kStp:     return "STP";
+    case Opcode::kXor:     return "XOR";
+    case Opcode::kMovn:    return "MOVN";
+    case Opcode::kSsat:    return "SSAT";
+    case Opcode::kAdd:     return "ADD";
+    case Opcode::kCls:     return "CLS";
+    case Opcode::kLi:      return "LI";
+    
+    case Opcode::kUnknown:
+    default:
+        return "UNKNOWN";
+    }
+
+    return "UNKNOWN";    
+}
 
 //————————————————————————————————————————————————————————————————————————————————
 
@@ -81,13 +112,13 @@ static enum Opcode GetOpcode (Word encoding)
         opcode = GetOpcodeFromLowBits (low_opcode_bits);
 
         LOG_TRACE_("Decode opcode {} from low bits {:06b} encoding {:032b}",
-                    static_cast<unsigned>(opcode), low_opcode_bits, encoding);    
+                    GetStringOpcode (opcode), low_opcode_bits, encoding);    
     }
     else {
         opcode = GetOpcodeFromHighBits (high_opcode_bits);
 
         LOG_TRACE_("Decode opcode {} from high bits {:06b} encoding {:032b}",
-                    static_cast<unsigned>(opcode), high_opcode_bits, encoding);    
+                    GetStringOpcode (opcode), high_opcode_bits, encoding);    
     }
 
     return opcode;
@@ -100,7 +131,7 @@ static Word GetField (Word encoding, FieldLocation location)
     assert (location.end_pos_ <= sizeof(Word) * 8);
     assert (location.end_pos_ >= location.start_pos_);
 
-    uint8_t width = location.end_pos_ - location.start_pos_ + 1;
+    uint8_t width = location.end_pos_ - location.start_pos_ + 1u;
 
     Word remove_upper_bits_mask = (1u << width) - 1;
 
@@ -161,16 +192,9 @@ static Word GetShortImmediate (Word encoding)
     return GetField (encoding, kShortImmediateFieldLocation);
 }
 
-//--------------------------------------------------------------------------------
-
-static Word GetShortImmediate (Word encoding)
-{
-    return GetField (encoding, kShortImmediateFieldLocation);
-}
-
 //————————————————————————————————————————————————————————————————————————————————
 
-Instruction Decode (Word encoding)
+Instruction CpuState::Decode (Word encoding)
 {
     Opcode opcode = GetOpcode (encoding);
 
@@ -288,9 +312,9 @@ Instruction Decode (Word encoding)
         "reg1_  = {:05b}\n"
         "reg2_  = {:05b}\n"
         "reg3_  = {:05b}\n"
-        "imm_   = {:.026b}",
+        "imm_   = {:026b}",
         encoding,
-        instr.opcode_,
+        GetStringOpcode (instr.opcode_),
         instr.reg1_,
         instr.reg2_,
         instr.reg3_,

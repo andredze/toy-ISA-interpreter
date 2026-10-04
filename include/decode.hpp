@@ -118,7 +118,7 @@ struct Instruction
 
 //==================================================
 
-Instruction Decode (Word encoding);
+std::string GetStringOpcode (Opcode opcode);
 
 //--------------------------------------------------------------------------------
 

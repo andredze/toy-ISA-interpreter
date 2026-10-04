@@ -19,10 +19,10 @@ int ExecuteProgram (BinaryCode& bin_code)
 
     Word encoding = cpu.Fetch (bin_code);
 
-    LOG_TRACE_("Fetched {:b} ({:#x})", encoding, encoding);
+    LOG_TRACE_("Fetched {:032b} ({:08X})", encoding, encoding);
     LOG_TRACE_("Decoding instruction...");
 
-    Instruction instr = Decode (encoding);
+    Instruction instr = cpu.Decode (encoding);
 
     // Execute (instr);
 

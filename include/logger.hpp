@@ -37,10 +37,8 @@ private:
 
     //==================================================
     
-    Logger (const std::string& file_name)
+    Logger (const std::string& file_name) : log_file_(file_name, std::ios::app)
     {
-        log_file_.open (file_name, std::ios::app);
-
         if (!log_file_.is_open ()) {
             std::cerr << "Failed to open a log_file " << file_name << std::endl;
         }
