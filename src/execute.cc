@@ -180,7 +180,7 @@ void CpuState::ExecuteBext (Instruction instr)
 
 //--------------------------------------------------------------------------------
 
-void CpuState::ExecuteLd (Instruction instr)
+void CpuState::ExecuteLd (Instruction instr, RAM& ram)
 {
     // base = reg1
     // rt   = reg2
@@ -190,24 +190,24 @@ void CpuState::ExecuteLd (Instruction instr)
 
     auto reg_base = instr.reg1_;
     auto reg_dest = instr.reg2_;
-    auto imm = instr.imm_;
+    auto imm = static_cast<GPRValue>(instr.imm_);
 
-    auto addr = GetRegValue (reg_base) + 
-                SignExtend  (imm, GetFieldWidth (kLdImmediateFieldLocation));
+    auto addr = static_cast<Word> (
+                GetRegValue (reg_base) + 
+                SignExtend  (imm, GetFieldWidth (kLdImmediateFieldLocation)));
 
-    // TODO: uncomment when implement memory
-    // if (!IsAligned (addr)) {
-    //     throw std::runtime_error ("MisalignedAccess");
-    // }
+    if (!ram.IsAligned (addr)) {
+        throw std::runtime_error ("MisalignedAccess");
+    }
 
-    // GPRValue result = MemoryLoadWord (memory, addr);
+    GPRValue result = ram.LoadWord (addr);
     
-    // SetRegValue (reg_dest, result);
+    SetRegValue (reg_dest, result);
 }
 
 //--------------------------------------------------------------------------------
 
-void CpuState::ExecuteSt (Instruction instr)
+void CpuState::ExecuteSt (Instruction instr, RAM& ram)
 {
     // base = reg1
     // rt   = reg2
@@ -217,19 +217,19 @@ void CpuState::ExecuteSt (Instruction instr)
 
     auto reg_base = instr.reg1_;
     auto reg_src  = instr.reg2_;
-    auto imm = instr.imm_;
+    auto imm = static_cast<GPRValue>(instr.imm_);
 
-    auto addr = GetRegValue (reg_base) + 
-                SignExtend  (imm, GetFieldWidth (kStImmediateFieldLocation));
+    auto addr = static_cast<Word> (
+                GetRegValue (reg_base) + 
+                SignExtend  (imm, GetFieldWidth (kStImmediateFieldLocation)));
 
-    // TODO: uncomment when implement memory
-    // if (!IsAligned (addr)) {
-    //     throw std::runtime_error ("MisalignedAccess");
-    // }
+    if (!ram.IsAligned (addr)) {
+        throw std::runtime_error ("MisalignedAccess");
+    }
 
     auto value = GetRegValue (reg_src);
 
-    // MemoryStoreWord (memory, addr, value);
+    ram.StoreWord (addr, value);
 }
 
 //--------------------------------------------------------------------------------
@@ -370,7 +370,7 @@ void CpuState::ExecuteAddi (Instruction instr)
 
 //--------------------------------------------------------------------------------
 
-void CpuState::ExecuteStp (Instruction instr)
+void CpuState::ExecuteStp (Instruction instr, RAM& ram)
 {
     // base = reg1
     // rt1  = reg2
@@ -383,21 +383,21 @@ void CpuState::ExecuteStp (Instruction instr)
     auto reg_base = instr.reg1_;
     auto reg_src1 = instr.reg2_;
     auto reg_src2 = instr.reg3_;
-    auto offset   = instr.imm_;
+    auto offset   = static_cast<GPRValue>(instr.imm_);
 
-    auto addr = GetRegValue (reg_base) + 
-                SignExtend  (offset, GetFieldWidth (kStpOffsetFieldLocation));
+    auto addr = static_cast<Word> (
+                GetRegValue (reg_base) + 
+                SignExtend  (offset, GetFieldWidth (kStpOffsetFieldLocation)));
 
-    // TODO: uncomment when implement memory
-    // if (!IsAligned (addr)) {
-    //     throw std::runtime_error ("MisalignedAccess");
-    // }
+    if (!ram.IsAligned (addr)) {
+        throw std::runtime_error ("MisalignedAccess");
+    }
 
     auto value1 = GetRegValue (reg_src1);
     auto value2 = GetRegValue (reg_src2);
 
-    // MemoryStoreWord (memory, addr,     value1);
-    // MemoryStoreWord (memory, addr + 4, value2);
+    ram.StoreWord (addr,     value1);
+    ram.StoreWord (addr + 4, value2);
 }
 
 //--------------------------------------------------------------------------------
@@ -603,19 +603,19 @@ void CpuState::ExecuteLi (Instruction instr)
 
 //--------------------------------------------------------------------------------
 
-void CpuState::Execute (Instruction instr)
+void CpuState::Execute (Instruction instr, RAM& ram)
 {
     switch (instr.opcode_)
     {
     case Opcode::kSyscall: ExecuteSyscall (instr); break;
     case Opcode::kBext:    ExecuteBext    (instr); break;
-    case Opcode::kLd:      ExecuteLd      (instr); break;
-    case Opcode::kSt:      ExecuteSt      (instr); break;
+    case Opcode::kLd:      ExecuteLd      (instr, ram); break;
+    case Opcode::kSt:      ExecuteSt      (instr, ram); break;
     case Opcode::kBeq:     ExecuteBeq     (instr); break;
     case Opcode::kJ:       ExecuteJ       (instr); break;
     case Opcode::kRori:    ExecuteRori    (instr); break;
     case Opcode::kAddi:    ExecuteAddi    (instr); break;
-    case Opcode::kStp:     ExecuteStp     (instr); break;
+    case Opcode::kStp:     ExecuteStp     (instr, ram); break;
     case Opcode::kXor:     ExecuteXor     (instr); break;
     case Opcode::kMovn:    ExecuteMovn    (instr); break;
     case Opcode::kSsat:    ExecuteSsat    (instr); break;

@@ -4,6 +4,7 @@
 #include "cpu.hpp"
 #include "logger.hpp"
 #include "interpreter.hpp"
+#include "memory.hpp"
 
 //————————————————————————————————————————————————————————————————————————————————
 
@@ -15,6 +16,8 @@ namespace toy_isa_interpreter
 int ExecuteProgram (BinaryCode& bin_code)
 {
     CpuState cpu{};
+
+    RAM ram{};
 
     LOG_TRACE_("Fetching instruction...");
 
@@ -29,7 +32,7 @@ int ExecuteProgram (BinaryCode& bin_code)
 
         try
         {
-            cpu.Execute (instr);
+            cpu.Execute (instr, ram);
         }
         catch (const GuestExit& exit)
         {

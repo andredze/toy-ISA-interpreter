@@ -9,6 +9,7 @@
 #include "binary_code_input.hpp"
 #include "error_handle.hpp"
 #include "decode.hpp"
+#include "memory.hpp"
 
 //--------------------------------------------------------------------------------
 
@@ -20,12 +21,12 @@ namespace toy_isa_interpreter
 class GuestExit : public std::exception
 {
 private:
-    std::size_t exit_code_;
+    int exit_code_;
 
 public:
-    GuestExit (std::size_t exit_code) : exit_code_(exit_code) {}
+    GuestExit (int exit_code) : exit_code_(exit_code) {}
 
-    std::size_t GetExitCode () const
+    int GetExitCode () const
     {
         return exit_code_;
     }
@@ -98,13 +99,13 @@ private:
 
     void ExecuteSyscall (Instruction instr);
     void ExecuteBext    (Instruction instr);
-    void ExecuteLd      (Instruction instr);
-    void ExecuteSt      (Instruction instr);
+    void ExecuteLd      (Instruction instr, RAM& ram);
+    void ExecuteSt      (Instruction instr, RAM& ram);
     void ExecuteBeq     (Instruction instr);
     void ExecuteJ       (Instruction instr);
     void ExecuteRori    (Instruction instr);
     void ExecuteAddi    (Instruction instr);
-    void ExecuteStp     (Instruction instr);
+    void ExecuteStp     (Instruction instr, RAM& ram);
     void ExecuteXor     (Instruction instr);
     void ExecuteMovn    (Instruction instr);
     void ExecuteSsat    (Instruction instr);
@@ -124,7 +125,7 @@ public:
 
     Instruction Decode (Word encoding) const;
 
-    void Execute (Instruction instr);
+    void Execute (Instruction instr, RAM& ram);
 }; // class CPUState
 
 //--------------------------------------------------------------------------------

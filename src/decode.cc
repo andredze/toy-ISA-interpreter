@@ -300,7 +300,7 @@ Instruction CpuState::Decode (Word encoding) const
 
     case Opcode::kLi:
         EnsureFieldIsZero (encoding, kLiZeroFieldLocation);
-        instr.reg1_ = GetFirstFieldReg (encoding);
+        instr.reg1_ = GetSecondFieldReg (encoding);
         instr.imm_  = GetField (encoding, kLiImmediateFieldLocation);
         break;
 
@@ -319,13 +319,13 @@ Instruction CpuState::Decode (Word encoding) const
         "reg1_  = {} {:05b}\n"
         "reg2_  = {} {:05b}\n"
         "reg3_  = {} {:05b}\n"
-        "imm_   = {:026b}",
+        "imm_   = {:026b} ({})\n",
         encoding,
         GetStringOpcode (instr.opcode_),
         GetStringReg    (instr.reg1_), static_cast<uint8_t>(instr.reg1_),
         GetStringReg    (instr.reg2_), static_cast<uint8_t>(instr.reg2_),
         GetStringReg    (instr.reg3_), static_cast<uint8_t>(instr.reg3_),
-        instr.imm_
+        instr.imm_, instr.imm_
     );
 
     return instr;

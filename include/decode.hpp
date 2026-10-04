@@ -25,7 +25,6 @@ constexpr std::size_t kRegLengthInBits = sizeof(GPRValue) * kBitsInByte;
 // General Purpose Registers
 enum class GPR : std::uint8_t
 {
-    kUnknown,
     kX0, // return value
     kX1, // arg0
     kX2, // arg1
@@ -42,6 +41,7 @@ enum class GPR : std::uint8_t
     kX25, kX26, kX27, kX28,
     kX29, kX30,
     kX31, // LR (link register, for return address)
+    kUnknown
 };
 
 //--------------------------------------------------------------------------------
@@ -149,8 +149,8 @@ constexpr FieldLocation kInstructionIndexFieldLocation = {0, 25};
 
 struct Instruction
 {
-    Opcode opcode_{};
-    GPR reg1_{}, reg2_{}, reg3_{};
+    Opcode opcode_{Opcode::kUnknown};
+    GPR reg1_{GPR::kUnknown}, reg2_{GPR::kUnknown}, reg3_{GPR::kUnknown};
     Word imm_{};
 };
 
