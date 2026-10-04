@@ -33,11 +33,7 @@ int main(int argc, char** argv)
 
     //==================================================
 
-    toy_isa_interpreter::ExecuteProgram (bin_code);
-
-    //==================================================
-
-    return EXIT_SUCCESS;
+    return toy_isa_interpreter::ExecuteProgram (bin_code);
 } 
 
 //--------------------------------------------------------------------------------

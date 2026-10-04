@@ -12,6 +12,10 @@ namespace toy_isa_interpreter
 
 //--------------------------------------------------------------------------------
 
+constexpr std::size_t kSyscallCodeExit = 60;
+
+//==================================================
+
 using GPRValue = std::int32_t;
 using PCValue  = std::uint32_t;
 

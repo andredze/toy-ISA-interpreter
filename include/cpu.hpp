@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <cassert>
+#include <exception>
 #include "config.hpp"
 #include "binary_code_input.hpp"
 #include "error_handle.hpp"
@@ -16,14 +17,30 @@ namespace toy_isa_interpreter
 
 //--------------------------------------------------------------------------------
 
+class GuestExit : public std::exception
+{
+private:
+    std::size_t exit_code_;
+
+public:
+    GuestExit (std::size_t exit_code) : exit_code_(exit_code) {}
+
+    std::size_t GetExitCode () const
+    {
+        return exit_code_;
+    }
+};
+
+//--------------------------------------------------------------------------------
+
 class BinaryCode : public binary_files_io::BinaryCode
 {
 public:
-    Word GetInstructionEncoding (PCValue program_counter)
+    Word GetInstructionEncoding (PCValue program_counter) const
     {
         if (program_counter >= capacity_) {
             std::string message = "Out of bounds: Program counter exceeds code capacity";
-            error_handle::PrintError ("{}", message);
+            // error_handle::PrintError ("{}", message);
             throw std::runtime_error (message);
         }
 

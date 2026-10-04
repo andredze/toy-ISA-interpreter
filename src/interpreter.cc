@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include "decode.hpp"
 #include "error_handle.hpp"
 #include "cpu.hpp"
@@ -26,10 +27,17 @@ int ExecuteProgram (BinaryCode& bin_code)
 
         Instruction instr = cpu.Decode (encoding);
 
-        cpu.Execute (instr);
+        try
+        {
+            cpu.Execute (instr);
+        }
+        catch (const GuestExit& exit)
+        {
+            return exit.GetExitCode ();    
+        }
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 //————————————————————————————————————————————————————————————————————————————————

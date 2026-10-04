@@ -117,6 +117,10 @@ void CpuState::ExecuteSyscall (Instruction instr)
         arg4, arg5, arg6, arg7
     );
 
+    if (syscall_number == kSyscallCodeExit) {
+        throw GuestExit (arg0);
+    }
+
     auto result = static_cast<GPRValue>(
     syscall (
         syscall_number,
