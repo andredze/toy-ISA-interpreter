@@ -73,8 +73,8 @@ enum class BinaryOpcodeLowBits : std::uint8_t
 
 struct FieldLocation
 {
-    uint8_t start_pos_;
-    uint8_t end_pos_;
+    uint8_t start_pos_{};
+    uint8_t end_pos_{};
 };
 
 //==================================================
@@ -111,9 +111,9 @@ constexpr FieldLocation kInstructionIndexFieldLocation = {0, 25};
 
 struct Instruction
 {
-    Opcode opcode_;
-    Byte reg1_, reg2_, reg3_;
-    Word imm_;
+    Opcode opcode_{};
+    Byte reg1_{}, reg2_{}, reg3_{};
+    Word imm_{};
 };
 
 //==================================================
