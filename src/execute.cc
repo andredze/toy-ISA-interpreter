@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include "cpu.hpp"
 #include "decode.hpp"
 #include "logger.hpp"
@@ -89,9 +90,54 @@ static GPRValue SignExtend (GPRValue source, uint8_t width)
 
 //==================================================
 
+void CpuState::ExecuteSyscall (Instruction instr)
+{
+    // SigException(SystemCall)
+    // X8 ― system call number, X0 - X7 ― args, X0 ― result, see man syscall
+
+    auto syscall_number = GetRegValue (GPR::kX8);
+
+    auto arg0 = GetRegValue (GPR::kX0);
+    auto arg1 = GetRegValue (GPR::kX1);
+    auto arg2 = GetRegValue (GPR::kX2);
+    auto arg3 = GetRegValue (GPR::kX3);
+    auto arg4 = GetRegValue (GPR::kX4);
+    auto arg5 = GetRegValue (GPR::kX5);
+    auto arg6 = GetRegValue (GPR::kX6);
+    auto arg7 = GetRegValue (GPR::kX7);
+
+    LOG_TRACE_(
+        "\nExecuting {}\n"
+        "Raising syscall {} with arguments\n"
+        "{}, {}, {}, {},\n"
+        "{}, {}, {}, {}\n",
+        GetStringOpcode (Opcode::kSyscall),
+        syscall_number,
+        arg0, arg1, arg2, arg3,
+        arg4, arg5, arg6, arg7
+    );
+
+    auto result = static_cast<GPRValue>(
+    syscall (
+        syscall_number,
+        arg0, arg1, arg2, arg3,
+        arg4, arg5, arg6, arg7
+    ));
+
+    SetRegValue (GPR::kX0, result);
+
+    LOG_TRACE_(
+        "\nResult of a syscall: {}\n",
+        result
+    );
+}
+
+//--------------------------------------------------------------------------------
+
 void CpuState::ExecuteBext (Instruction instr)
 {
     // X[reg1] ← bit_extract(X[reg2], X[reg3])
+
     GPR reg_data   = instr.reg2_;
     GPR reg_mask   = instr.reg3_;
     GPR reg_result = instr.reg1_;
@@ -126,6 +172,60 @@ void CpuState::ExecuteBext (Instruction instr)
     );
 
     AdvanceProgramCounter ();
+}
+
+//--------------------------------------------------------------------------------
+
+void CpuState::ExecuteLd (Instruction instr)
+{
+    // base = reg1
+    // rt   = reg2
+    // addr ← X[base] + sign_extend(imm)
+    // raise MisalignedAccess unless isAligned(addr)
+    // X[rt] ← memory[addr]
+
+    auto reg_base = instr.reg1_;
+    auto reg_dest = instr.reg2_;
+    auto imm = instr.imm_;
+
+    auto addr = GetRegValue (reg_base) + 
+                SignExtend  (imm, GetFieldWidth (kLdImmediateFieldLocation));
+
+    // TODO: uncomment when implement memory
+    // if (!IsAligned (addr)) {
+    //     throw std::runtime_error ("MisalignedAccess");
+    // }
+
+    // GPRValue result = MemoryLoadWord (memory, addr);
+    
+    // SetRegValue (reg_dest, result);
+}
+
+//--------------------------------------------------------------------------------
+
+void CpuState::ExecuteSt (Instruction instr)
+{
+    // base = reg1
+    // rt   = reg2
+    // addr ← X[base] + sign_extend(imm)
+    // raise MisalignedAccess unless isAligned(addr)
+    // memory[addr] ← X[rt]
+
+    auto reg_base = instr.reg1_;
+    auto reg_src  = instr.reg2_;
+    auto imm = instr.imm_;
+
+    auto addr = GetRegValue (reg_base) + 
+                SignExtend  (imm, GetFieldWidth (kStImmediateFieldLocation));
+
+    // TODO: uncomment when implement memory
+    // if (!IsAligned (addr)) {
+    //     throw std::runtime_error ("MisalignedAccess");
+    // }
+
+    auto value = GetRegValue (reg_src);
+
+    // MemoryStoreWord (memory, addr, value);
 }
 
 //--------------------------------------------------------------------------------
@@ -265,6 +365,39 @@ void CpuState::ExecuteAddi (Instruction instr)
 }
 
 //--------------------------------------------------------------------------------
+
+void CpuState::ExecuteStp (Instruction instr)
+{
+    // base = reg1
+    // rt1  = reg2
+    // rt2  = reg3
+    // addr ← X[base] + sign_extend(offset)
+    // raise MisalignedAccess unless isAligned(addr)
+    // memory[addr] ← X[rt1]
+    // memory[addr + 4] ← X[rt2]
+
+    auto reg_base = instr.reg1_;
+    auto reg_src1 = instr.reg2_;
+    auto reg_src2 = instr.reg3_;
+    auto offset   = instr.imm_;
+
+    auto addr = GetRegValue (reg_base) + 
+                SignExtend  (offset, GetFieldWidth (kStpOffsetFieldLocation));
+
+    // TODO: uncomment when implement memory
+    // if (!IsAligned (addr)) {
+    //     throw std::runtime_error ("MisalignedAccess");
+    // }
+
+    auto value1 = GetRegValue (reg_src1);
+    auto value2 = GetRegValue (reg_src2);
+
+    // MemoryStoreWord (memory, addr,     value1);
+    // MemoryStoreWord (memory, addr + 4, value2);
+}
+
+//--------------------------------------------------------------------------------
+
 void CpuState::ExecuteXor (Instruction instr)
 {
     // X[reg3] ← X[reg1] ^ X[reg2]
@@ -470,21 +603,21 @@ void CpuState::Execute (Instruction instr)
 {
     switch (instr.opcode_)
     {
-    case Opcode::kSyscall: break;
-    case Opcode::kBext:    ExecuteBext (instr); break;
-    case Opcode::kLd:      break;
-    case Opcode::kSt:      break;
-    case Opcode::kBeq:     ExecuteBeq  (instr); break;
-    case Opcode::kJ:       ExecuteJ    (instr); break;
-    case Opcode::kRori:    ExecuteRori (instr); break;
-    case Opcode::kAddi:    ExecuteAddi (instr); break;
-    case Opcode::kStp:     break;
-    case Opcode::kXor:     ExecuteXor  (instr); break;
-    case Opcode::kMovn:    ExecuteMovn (instr); break;
-    case Opcode::kSsat:    ExecuteSsat (instr); break;
-    case Opcode::kAdd:     ExecuteAdd  (instr); break;
-    case Opcode::kCls:     ExecuteCls  (instr); break;
-    case Opcode::kLi:      ExecuteLi   (instr); break;
+    case Opcode::kSyscall: ExecuteSyscall (instr); break;
+    case Opcode::kBext:    ExecuteBext    (instr); break;
+    case Opcode::kLd:      ExecuteLd      (instr); break;
+    case Opcode::kSt:      ExecuteSt      (instr); break;
+    case Opcode::kBeq:     ExecuteBeq     (instr); break;
+    case Opcode::kJ:       ExecuteJ       (instr); break;
+    case Opcode::kRori:    ExecuteRori    (instr); break;
+    case Opcode::kAddi:    ExecuteAddi    (instr); break;
+    case Opcode::kStp:     ExecuteStp     (instr); break;
+    case Opcode::kXor:     ExecuteXor     (instr); break;
+    case Opcode::kMovn:    ExecuteMovn    (instr); break;
+    case Opcode::kSsat:    ExecuteSsat    (instr); break;
+    case Opcode::kAdd:     ExecuteAdd     (instr); break;
+    case Opcode::kCls:     ExecuteCls     (instr); break;
+    case Opcode::kLi:      ExecuteLi      (instr); break;
     case Opcode::kUnknown:
     default:
         throw std::runtime_error ("Failed to execute: Unknown instruction opcode");

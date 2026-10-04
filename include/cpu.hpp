@@ -79,17 +79,21 @@ private:
 
     //==================================================
 
-    void ExecuteBext  (Instruction instr);
-    void ExecuteBeq   (Instruction instr);
-    void ExecuteJ     (Instruction instr);
-    void ExecuteRori  (Instruction instr);
-    void ExecuteAddi  (Instruction instr);
-    void ExecuteXor   (Instruction instr);
-    void ExecuteMovn  (Instruction instr);
-    void ExecuteSsat  (Instruction instr);
-    void ExecuteAdd   (Instruction instr);
-    void ExecuteCls   (Instruction instr);
-    void ExecuteLi    (Instruction instr);
+    void ExecuteSyscall (Instruction instr);
+    void ExecuteBext    (Instruction instr);
+    void ExecuteLd      (Instruction instr);
+    void ExecuteSt      (Instruction instr);
+    void ExecuteBeq     (Instruction instr);
+    void ExecuteJ       (Instruction instr);
+    void ExecuteRori    (Instruction instr);
+    void ExecuteAddi    (Instruction instr);
+    void ExecuteStp     (Instruction instr);
+    void ExecuteXor     (Instruction instr);
+    void ExecuteMovn    (Instruction instr);
+    void ExecuteSsat    (Instruction instr);
+    void ExecuteAdd     (Instruction instr);
+    void ExecuteCls     (Instruction instr);
+    void ExecuteLi      (Instruction instr);
 
     //--------------------------------------------------------------------------------
 
