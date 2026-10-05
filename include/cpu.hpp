@@ -10,6 +10,7 @@
 #include "error_handle.hpp"
 #include "decode.hpp"
 #include "memory.hpp"
+#include "cache.hpp"
 
 //--------------------------------------------------------------------------------
 
@@ -83,11 +84,6 @@ private:
 
     std::string GetStringReg (GPR reg) const;
 
-    PCValue GetProgramCounter () const
-    {
-        return program_counter_;
-    }
-
     void SetProgramCounter (PCValue value)
     {
         program_counter_ = value;
@@ -118,6 +114,11 @@ private:
 public:
     CpuState () : general_purpose_regs_{}, program_counter_(0) {};
 
+    PCValue GetProgramCounter () const
+    {
+        return program_counter_;
+    }
+
     Word Fetch (BinaryCode& code) const
     {
         return code.GetInstructionEncoding (program_counter_);
@@ -126,6 +127,8 @@ public:
     Instruction Decode (Word encoding) const;
 
     void Execute (Instruction instr, RAM& ram);
+
+    void ExecuteBasicBlock (BasicBlock block, RAM& ram);
 }; // class CPUState
 
 //--------------------------------------------------------------------------------

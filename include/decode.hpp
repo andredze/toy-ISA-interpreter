@@ -158,6 +158,8 @@ struct Instruction
 
 std::string GetStringOpcode (Opcode opcode);
 
+bool ChangesControlFlow (Opcode opcode);
+
 //--------------------------------------------------------------------------------
 
 }; // namespace toy_isa_interpreter

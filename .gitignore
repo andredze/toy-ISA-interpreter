@@ -3,3 +3,4 @@ tests/
 .log
 *.log
 *.gdb_history
+.pseudo_code.cpp

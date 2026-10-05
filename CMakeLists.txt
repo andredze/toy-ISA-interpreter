@@ -68,6 +68,7 @@ target_sources(${EXECUTABLE}
         src/decode.cc
         src/binary_code_input.cc
         src/interpreter.cc
+        src/cache.cc
 
     PUBLIC
         FILE_SET HEADERS
