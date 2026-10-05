@@ -35,7 +35,7 @@ public:
 
     bool Prefetch (PCValue pc, BasicBlock& dest);
 
-    void Add (Instruction decoded_instr, PCValue pc);
+    void Add (Instruction& decoded_instr, PCValue pc);
 };
 
 //--------------------------------------------------------------------------------

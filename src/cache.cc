@@ -24,7 +24,7 @@ bool Cache::Prefetch (PCValue pc, BasicBlock& dest)
 
 //--------------------------------------------------------------------------------
 
-void Cache::Add (Instruction decoded_instr, PCValue pc)
+void Cache::Add (Instruction& decoded_instr, PCValue pc)
 {
     assert (map_.find (pc) == map_.end ());
 

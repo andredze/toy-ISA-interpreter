@@ -72,6 +72,7 @@ if (TESTS)
         PUBLIC
             FILE_SET HEADERS
             BASE_DIRS
+                tests
                 include
     )
     target_link_libraries(${EXECUTABLE} gtest gmock pthread)

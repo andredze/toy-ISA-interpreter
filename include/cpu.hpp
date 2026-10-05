@@ -64,24 +64,6 @@ private:
 
     //==================================================
 
-    void SetRegValue (GPR reg, GPRValue value)
-    {
-        unsigned reg_code = static_cast<unsigned>(reg);
-
-        assert (reg_code < kGeneralPurposeRegistersNumber);
-
-        general_purpose_regs_[reg_code] = value;
-    }
-
-    GPRValue GetRegValue (GPR reg) const
-    {
-        unsigned reg_code = static_cast<unsigned>(reg);
-
-        assert (reg_code < kGeneralPurposeRegistersNumber);
-
-        return general_purpose_regs_[reg_code];
-    }
-
     std::string GetStringReg (GPR reg) const;
 
     void SetProgramCounter (PCValue value)
@@ -117,6 +99,24 @@ public:
     PCValue GetProgramCounter () const
     {
         return program_counter_;
+    }
+
+    void SetRegValue (GPR reg, GPRValue value)
+    {
+        unsigned reg_code = static_cast<unsigned>(reg);
+
+        assert (reg_code < kGeneralPurposeRegistersNumber);
+
+        general_purpose_regs_[reg_code] = value;
+    }
+
+    GPRValue GetRegValue (GPR reg) const
+    {
+        unsigned reg_code = static_cast<unsigned>(reg);
+
+        assert (reg_code < kGeneralPurposeRegistersNumber);
+
+        return general_purpose_regs_[reg_code];
     }
 
     Word Fetch (BinaryCode& code) const
