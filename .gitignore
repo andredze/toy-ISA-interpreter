@@ -1,6 +1,6 @@
 build/
 !tests/loop.bin
-tests/
+tests_bin/
 .log
 *.log
 *.gdb_history

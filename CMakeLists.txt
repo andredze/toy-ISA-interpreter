@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.11)
 
 project(toy_ISA_interpreter)
 
-option(ENABLE_SANITIZER_ADDRESS "Enable AddressSanitizer" OFF)
-
 set(EXECUTABLE anki_interpreter)
 add_executable(${EXECUTABLE})
 
@@ -61,17 +59,35 @@ else()
     )
 endif()
 
-target_sources(${EXECUTABLE}
-    PRIVATE
-        src/main.cc
-        src/execute.cc
-        src/decode.cc
-        src/binary_code_input.cc
-        src/interpreter.cc
-        src/cache.cc
+if (TESTS)
+    target_sources(${EXECUTABLE}
+        PRIVATE
+            tests/main.cc
+            src/execute.cc
+            src/decode.cc
+            src/binary_code_input.cc
+            src/interpreter.cc
+            src/cache.cc
 
-    PUBLIC
-        FILE_SET HEADERS
-        BASE_DIRS
-            include
-)
+        PUBLIC
+            FILE_SET HEADERS
+            BASE_DIRS
+                include
+    )
+    target_link_libraries(${EXECUTABLE} gtest gmock pthread)
+else()
+    target_sources(${EXECUTABLE}
+        PRIVATE
+            src/main.cc
+            src/execute.cc
+            src/decode.cc
+            src/binary_code_input.cc
+            src/interpreter.cc
+            src/cache.cc
+
+        PUBLIC
+            FILE_SET HEADERS
+            BASE_DIRS
+                include
+    )
+endif()
