@@ -117,10 +117,10 @@ public:
         std::string message = std::vformat (format, std::make_format_args (args...));
 
         std::string log_line = std::format (
-            "[{}] [{}] [{:<7}] [{}]\n",
-            location_line,
-            GetCurrentTime (),
+            "---[{}] [{}] [{:<7}] \n[{}]\n\n",
             GetLogModeString (mode),
+            GetCurrentTime (),
+            location_line,
             message
         );
 

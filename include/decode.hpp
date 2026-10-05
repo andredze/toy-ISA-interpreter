@@ -119,7 +119,7 @@ uint8_t GetFieldWidth (FieldLocation location);
 
 constexpr FieldLocation kSyscallCodeFieldLocation      = {6, 25};
 
-constexpr FieldLocation kFirstRegisterFieldLocation    = {21, 26};
+constexpr FieldLocation kFirstRegisterFieldLocation    = {21, 25};
 constexpr FieldLocation kSecondRegisterFieldLocation   = {16, 20};
 constexpr FieldLocation kThirdRegisterFieldLocation    = {11, 15};
 

@@ -1,4 +1,5 @@
 build/
+!tests/loop.bin
 tests/
 .log
 *.log

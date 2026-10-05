@@ -58,7 +58,7 @@ std::string CpuState::GetStringReg (GPR reg) const
 
 void CpuState::AdvanceProgramCounter ()
 {
-    LOG_TRACE_("\nAdvancing PC: PC = {} + 4 = {}", 
+    LOG_TRACE_("Advancing PC: PC = {} + 4 = {}", 
                 program_counter_, program_counter_ + 4u);
 
     program_counter_ += 4u;
@@ -107,12 +107,12 @@ void CpuState::ExecuteSyscall (Instruction instr)
     auto arg7 = GetRegValue (GPR::kX7);
 
     LOG_TRACE_(
-        "\nExecuting {}\n"
-        "Raising syscall {} with arguments\n"
+        "Executing {}\n"
+        "Raising syscall {} ({}) with arguments\n"
         "{}, {}, {}, {},\n"
-        "{}, {}, {}, {}\n",
+        "{}, {}, {}, {}",
         GetStringOpcode (Opcode::kSyscall),
-        syscall_number,
+        syscall_number, GetStringReg (GPR::kX8),
         arg0, arg1, arg2, arg3,
         arg4, arg5, arg6, arg7
     );
@@ -131,7 +131,7 @@ void CpuState::ExecuteSyscall (Instruction instr)
     SetRegValue (GPR::kX0, result);
 
     LOG_TRACE_(
-        "\nResult of a syscall: {}\n",
+        "Result of a syscall: {}",
         result
     );
 }
@@ -161,11 +161,11 @@ void CpuState::ExecuteBext (Instruction instr)
     SetRegValue (reg_result, packed_bits);
 
     LOG_TRACE_(
-        "\nExecuting {}:\n"
+        "Executing {}:\n"
         "{} = bit_extract(data {}, mask {})\n"
         "data {}   = {:032b}\n"
         "mask {}   = {:032b}\n"
-        "result {} = {:032b}\n",
+        "result {} = {:032b}",
         GetStringOpcode (Opcode::kBext),
         GetStringReg (reg_result),
         GetStringReg (reg_data),
@@ -256,13 +256,13 @@ void CpuState::ExecuteBeq (Instruction instr)
     auto result = pc_value + target;
 
     LOG_TRACE_(
-        "\nExecuting {}\n"
+        "Executing {}\n"
         "target = {}\n"
         "check condition:\n"
         "{} with value {}\n"
         "{} with value {}\n"
         "cond equals = {}\n"
-        "if true: new PC = {}\n",
+        "if true: new PC = {}",
         GetStringOpcode (Opcode::kBeq),
         target,
         GetStringReg (instr.reg1_), value1,
@@ -294,8 +294,8 @@ void CpuState::ExecuteJ (Instruction instr)
     SetProgramCounter (result);
 
     LOG_TRACE_(
-        "\nExecuting {}\n"
-        "PC = {} + 4 * {} = {}\n",
+        "Executing {}\n"
+        "PC = {} + 4 * {} = {}",
         GetStringOpcode (Opcode::kJ),
         pc_value, instr_index, result
     );
@@ -320,10 +320,10 @@ void CpuState::ExecuteRori (Instruction instr)
     SetRegValue (reg_result, result);
 
     LOG_TRACE_(
-        "\nExecuting {}:\n"
+        "Executing {}:\n"
         "Rotating by {} bits:\n"
         "source: {} = {:032b}\n"
-        "result: {} = {:032b}\n",
+        "result: {} = {:032b}",
         GetStringOpcode (Opcode::kRori),
         rotate_count,
         GetStringReg (reg_source), value,
@@ -353,11 +353,11 @@ void CpuState::ExecuteAddi (Instruction instr)
     SetRegValue (reg_result, result);
 
     LOG_TRACE_(
-        "\nExecuting {}:\n"
+        "Executing {}:\n"
         "source1: {} = {:032b}\n"
         "imm: {:016b}\n"
         "sign_extended_imm: {:032b}\n"
-        "result: {} = {:032b}\n",
+        "result: {} = {:032b}",
         GetStringOpcode (Opcode::kAddi),
         GetStringReg (reg_source), value1,
         imm,
@@ -416,7 +416,7 @@ void CpuState::ExecuteXor (Instruction instr)
     SetRegValue (reg_result, result);
 
     LOG_TRACE_(
-        "\nExecuting {}:\n"
+        "Executing {}:\n"
         "{} = {} ^ {}\n"
         "{} = {} ^ {}",
         GetStringOpcode (Opcode::kXor),
@@ -445,10 +445,10 @@ void CpuState::ExecuteMovn (Instruction instr)
     }
 
     LOG_TRACE_(
-        "\nExecuting {}:\n"
+        "Executing {}:\n"
         "if ({} != 0) {} ← {}\n"
         "({} ({}) != 0) is {}\n"
-        "so: {} = {}\n",
+        "so: {} = {}",
         GetStringOpcode (Opcode::kMovn),
         GetStringReg (instr.reg2_),
         GetStringReg (instr.reg3_),
@@ -489,12 +489,12 @@ void CpuState::ExecuteSsat (Instruction instr)
     SetRegValue (reg_result, value);
 
     LOG_TRACE_(
-        "\nExecuting {}:\n"
+        "Executing {}:\n"
         "bits_count = {}\n"
         "max_value = {}\n"
         "min_value = {}\n"
         "value before saturation = {} (from {})\n"
-        "result value = {} = {}\n",
+        "result value = {} = {}",
         GetStringOpcode (Opcode::kSsat),
         bits_count,
         max_value,
@@ -520,7 +520,7 @@ void CpuState::ExecuteAdd (Instruction instr)
     SetRegValue (instr.reg3_, result);
 
     LOG_TRACE_(
-        "\nExecuting {}:\n"
+        "Executing {}:\n"
         "{} = {} + {}\n"
         "{} = {} + {}",
         GetStringOpcode (Opcode::kAdd),
@@ -559,10 +559,10 @@ void CpuState::ExecuteCls (Instruction instr)
     SetRegValue (reg_result, leading_ones_count);
 
     LOG_TRACE_(
-        "\nExecuting {}\n"
+        "Executing {}\n"
         "source: {} = {:032b}\n"
         "leading_ones = {}\n"
-        "write back: {} = {}\n",
+        "write back: {} = {}",
         GetStringOpcode (Opcode::kCls),
         GetStringReg (reg_source), value,
         leading_ones_count,
@@ -588,10 +588,10 @@ void CpuState::ExecuteLi (Instruction instr)
     SetRegValue (reg, result);
 
     LOG_TRACE_(
-        "\nExecuting {}\n"
+        "Executing {}\n"
         "imm = {:016b}\n"
         "result = {:032b}\n"
-        "write back: {} = {}\n",
+        "write back: {} = {}",
         GetStringOpcode (Opcode::kLi),
         imm,
         result,

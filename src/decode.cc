@@ -320,13 +320,13 @@ Instruction CpuState::Decode (Word encoding) const
     }
 
     LOG_TRACE_(
-        "\nDecoded an instruction:"
+        "Decoded an instruction:"
         "from encoding: {:032b}\n"
         "opcode = {}\n"
         "reg1_  = {} {:05b}\n"
         "reg2_  = {} {:05b}\n"
         "reg3_  = {} {:05b}\n"
-        "imm_   = {:026b} ({})\n",
+        "imm_   = {:026b} ({})",
         encoding,
         GetStringOpcode (instr.opcode_),
         GetStringReg    (instr.reg1_), static_cast<uint8_t>(instr.reg1_),

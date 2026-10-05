@@ -16,7 +16,7 @@ namespace toy_isa_interpreter
 
 void CpuState::ExecuteBasicBlock (BasicBlock block, RAM& ram)
 {
-    LOG_TRACE_("Executing BasicBlock");
+    LOG_TRACE_("Executing BasicBlock with size = {}", block.size ());
 
     for (auto instr : block) {
         LOG_TRACE_("BB executing {}", GetStringOpcode (instr.opcode_));
