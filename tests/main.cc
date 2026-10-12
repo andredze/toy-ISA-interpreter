@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 #include "cpu.hpp"
 #include "decode.hpp"
-#include "decoder.hpp"
+#include "test_decode.hpp"
+#include "test_execute.hpp"
 
 //--------------------------------------------------------------------------------
 
