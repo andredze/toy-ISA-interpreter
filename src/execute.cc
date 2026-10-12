@@ -203,6 +203,8 @@ void CpuState::ExecuteLd (Instruction instr, RAM& ram)
     GPRValue result = ram.LoadWord (addr);
     
     SetRegValue (reg_dest, result);
+
+    AdvanceProgramCounter ();
 }
 
 //--------------------------------------------------------------------------------
@@ -230,6 +232,8 @@ void CpuState::ExecuteSt (Instruction instr, RAM& ram)
     auto value = GetRegValue (reg_src);
 
     ram.StoreWord (addr, value);
+
+    AdvanceProgramCounter ();
 }
 
 //--------------------------------------------------------------------------------
@@ -398,6 +402,8 @@ void CpuState::ExecuteStp (Instruction instr, RAM& ram)
 
     ram.StoreWord (addr,     value1);
     ram.StoreWord (addr + 4, value2);
+
+    AdvanceProgramCounter ();
 }
 
 //--------------------------------------------------------------------------------
@@ -474,8 +480,8 @@ void CpuState::ExecuteSsat (Instruction instr)
     
     auto bits_count = instr.imm_;
 
-    auto max_value = (1 << bits_count) - 1;
-    auto min_value = - (1 << bits_count);
+    auto max_value = (1 << (bits_count - 1)) - 1;
+    auto min_value = - (1 << (bits_count - 1));
 
     auto value = GetRegValue (reg_value);
 

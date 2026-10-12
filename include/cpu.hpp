@@ -66,11 +66,6 @@ private:
 
     std::string GetStringReg (GPR reg) const;
 
-    void SetProgramCounter (PCValue value)
-    {
-        program_counter_ = value;
-    }
-
     void AdvanceProgramCounter ();
 
     //==================================================
@@ -95,6 +90,11 @@ private:
 
 public:
     CpuState () : general_purpose_regs_{}, program_counter_(0) {};
+
+    void SetProgramCounter (PCValue value)
+    {
+        program_counter_ = value;
+    }
 
     PCValue GetProgramCounter () const
     {
