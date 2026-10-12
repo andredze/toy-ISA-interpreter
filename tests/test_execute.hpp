@@ -486,3 +486,47 @@ TEST(MemoryUsageExecutionTest, canThrowFromStpMisAligned)
 }
 
 //--------------------------------------------------------------------------------
+
+TEST(SyscallExecutionTest, canExecuteSyscallExit)
+{
+    CpuState cpu{};
+    RAM ram{};
+
+    cpu.SetProgramCounter (0x00);
+
+    cpu.SetRegValue (GPR::kX0, EXIT_SUCCESS);
+    cpu.SetRegValue (GPR::kX8, kSyscallCodeExit);
+
+    Instruction instr = {
+        .opcode_ = Opcode::kSyscall
+    };
+
+    EXPECT_THROW(cpu.Execute (instr, ram), GuestExit);
+}
+
+//--------------------------------------------------------------------------------
+
+TEST(SyscallExecutionTest, canExecuteSyscallWrite)
+{
+    CpuState cpu{};
+    RAM ram{};
+
+    cpu.SetProgramCounter (0x00);
+
+    cpu.SetRegValue (GPR::kX1, 77777);
+    cpu.SetRegValue (GPR::kX8, kSyscallCodeWrite);
+
+    Instruction instr = {
+        .opcode_ = Opcode::kSyscall
+    };
+
+    testing::internal::CaptureStdout();
+
+    cpu.Execute (instr, ram);
+
+    std::string expected = "77777\n";
+
+    EXPECT_EQ (expected, ::testing::internal::GetCapturedStdout ());
+}
+
+//--------------------------------------------------------------------------------

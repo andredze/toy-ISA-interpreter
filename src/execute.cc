@@ -120,6 +120,21 @@ void CpuState::ExecuteSyscall (Instruction instr)
     if (syscall_number == kSyscallCodeExit) {
         throw GuestExit (arg0);
     }
+    else if (syscall_number == kSyscallCodeWrite) {
+        std::cout << GetRegValue (GPR::kX1);
+
+        LOG_TRACE_("Wrote {}", GetRegValue (GPR::kX1));
+        return;
+    }
+    else if (syscall_number == kSyscallCodeRead) {
+        GPRValue input_number = 0;
+        std::cin >> input_number;
+
+        SetRegValue (GPR::kX0, input_number);
+
+        LOG_TRACE_("Read {}", input_number);
+        return;
+    }
 
     auto result = static_cast<GPRValue>(
     syscall (

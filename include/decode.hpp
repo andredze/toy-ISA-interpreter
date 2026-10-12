@@ -12,7 +12,9 @@ namespace toy_isa_interpreter
 
 //--------------------------------------------------------------------------------
 
-constexpr std::size_t kSyscallCodeExit = 60;
+constexpr std::size_t kSyscallCodeExit  = 60;
+constexpr std::size_t kSyscallCodeWrite = 1;
+constexpr std::size_t kSyscallCodeRead  = 0;
 
 //==================================================
 
