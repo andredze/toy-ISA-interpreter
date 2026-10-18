@@ -1,3 +1,5 @@
+binary/
+example.rb
 build/
 !tests/loop.bin
 tests_bin/
@@ -7,3 +9,5 @@ tests_bin/
 .pseudo_code.cpp
 compile_commands.json
 .vscode/
+asm/
+binary/
