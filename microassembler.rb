@@ -100,6 +100,8 @@ class MicroAssembler
             # Remove whitespaces
             line = line.strip
 
+            next if line.empty?
+
             name, args_str = line.split(/ /, 2)
 
             if args_str != nil
@@ -110,10 +112,6 @@ class MicroAssembler
 
             send(name, *args)
         end
-
-        # bext("x1", "x2", "x3") 
-        # li("x8", 60)
-        # syscall() 
 
         # V | Integer | 32-bit unsigned, VAX (little-endian) byte order
         # * for all
@@ -187,7 +185,7 @@ class MicroAssembler
 
                 curr_word_length += width
                 word <<= width
-                word |= curr_arg
+                word |= (curr_arg & ((1 << width) - 1))
 
                 puts "\t\tword: #{word.to_s(2).rjust(curr_word_length, '0')}"
             end
