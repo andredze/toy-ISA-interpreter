@@ -2,7 +2,7 @@
 
 //--------------------------------------------------------------------------------
 
-#include "cpu.hpp"
+#include "interpreter.hpp"
 #include <gtest/gtest.h>
 
 //--------------------------------------------------------------------------------
@@ -13,7 +13,8 @@ using namespace toy_isa_interpreter;
 
 TEST(Decoder, Syscall)
 {
-    CpuState cpu{};
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
 
     Word encoding1 = 0b000000'00000'00000'00000'00000'001101;
 
@@ -38,7 +39,8 @@ TEST(Decoder, Syscall)
 
 TEST(Decoder, Bext)
 {
-    CpuState cpu{};
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
 
     Word encoding = 0b000000'00001'00010'00011'00000'111001;
 
@@ -55,7 +57,8 @@ TEST(Decoder, Bext)
 
 TEST(Decoder, Ld)
 {
-    CpuState cpu{};
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
 
     Word encoding = 0b011100'00001'00010'00'10000000'111001;
 
@@ -72,7 +75,8 @@ TEST(Decoder, Ld)
 
 TEST(Decoder, St)
 {
-    CpuState cpu{};
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
 
     Word encoding = 0b110000'00001'00010'00'10000000'111001;
 
@@ -89,7 +93,8 @@ TEST(Decoder, St)
 
 TEST(Decoder, Beq)
 {
-    CpuState cpu{};
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
 
     Word encoding = 0b100111'00001'00010'1010000000111001;
 
@@ -106,7 +111,8 @@ TEST(Decoder, Beq)
 
 TEST(Decoder, J)
 {
-    CpuState cpu{};
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
 
     Word encoding = 0b001111'10001000101010000000111001;
 
@@ -123,7 +129,8 @@ TEST(Decoder, J)
 
 TEST(Decoder, Rori)
 {
-    CpuState cpu{};
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
 
     Word encoding = 0b101100'00001'00010'10100'00000000000;
 
@@ -140,7 +147,8 @@ TEST(Decoder, Rori)
 
 TEST(Decoder, Addi)
 {
-    CpuState cpu{};
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
 
     Word encoding = 0b010111'00001'00010'1010000000001001;
 
@@ -157,7 +165,8 @@ TEST(Decoder, Addi)
 
 TEST(Decoder, Stp)
 {
-    CpuState cpu{};
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
 
     Word encoding = 0b111011'00001'00010'11111'10000000001;
 
@@ -174,7 +183,8 @@ TEST(Decoder, Stp)
 
 TEST(Decoder, Xor)
 {
-    CpuState cpu{};
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
 
     Word encoding = 0b000000'00001'00010'11111'00000'111110;
 
@@ -191,7 +201,8 @@ TEST(Decoder, Xor)
 
 TEST(Decoder, Movn)
 {
-    CpuState cpu{};
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
 
     Word encoding = 0b000000'00001'00010'11111'00000'011001;
 
@@ -208,7 +219,8 @@ TEST(Decoder, Movn)
 
 TEST(Decoder, Ssat)
 {
-    CpuState cpu{};
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
 
     Word encoding = 0b010010'00001'00010'11111'00000000000;
 
@@ -225,7 +237,8 @@ TEST(Decoder, Ssat)
 
 TEST(Decoder, Add)
 {
-    CpuState cpu{};
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
 
     Word encoding = 0b000000'00001'00010'11111'00000'011011;
 
@@ -242,7 +255,8 @@ TEST(Decoder, Add)
 
 TEST(Decoder, Cls)
 {
-    CpuState cpu{};
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
 
     Word encoding = 0b000000'00001'00010'00000'00000'101000;
 
@@ -259,7 +273,8 @@ TEST(Decoder, Cls)
 
 TEST(Decoder, Li)
 {
-    CpuState cpu{};
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
 
     Word encoding = 0b011101'00000'00011'1000001000101000;
 
@@ -273,4 +288,3 @@ TEST(Decoder, Li)
 }
 
 //--------------------------------------------------------------------------------
-

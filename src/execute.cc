@@ -121,10 +121,9 @@ void CpuState::ExecuteSyscall (Instruction instr)
         throw GuestExit (arg0);
     }
     else if (syscall_number == kSyscallCodeWrite) {
-        std::cout << GetRegValue (GPR::kX1);
+        std::cout << GetRegValue (GPR::kX1) << std::endl;
 
         LOG_TRACE_("Wrote {}", GetRegValue (GPR::kX1));
-        return;
     }
     else if (syscall_number == kSyscallCodeRead) {
         GPRValue input_number = 0;
@@ -133,22 +132,24 @@ void CpuState::ExecuteSyscall (Instruction instr)
         SetRegValue (GPR::kX0, input_number);
 
         LOG_TRACE_("Read {}", input_number);
-        return;
+    }
+    else {
+        auto result = static_cast<GPRValue>(
+        syscall (
+            syscall_number,
+            arg0, arg1, arg2, arg3,
+            arg4, arg5, arg6, arg7
+        ));
+
+        SetRegValue (GPR::kX0, result);
+
+        LOG_TRACE_(
+            "Result of a syscall: {}",
+            result
+        );
     }
 
-    auto result = static_cast<GPRValue>(
-    syscall (
-        syscall_number,
-        arg0, arg1, arg2, arg3,
-        arg4, arg5, arg6, arg7
-    ));
-
-    SetRegValue (GPR::kX0, result);
-
-    LOG_TRACE_(
-        "Result of a syscall: {}",
-        result
-    );
+    AdvanceProgramCounter ();
 }
 
 //--------------------------------------------------------------------------------

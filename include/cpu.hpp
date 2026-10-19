@@ -8,6 +8,7 @@
 #include "config.hpp"
 #include "binary_code_input.hpp"
 #include "error_handle.hpp"
+#include "logger.hpp"
 #include "decode.hpp"
 #include "memory.hpp"
 #include "cache.hpp"
@@ -108,6 +109,8 @@ public:
         assert (reg_code < kGeneralPurposeRegistersNumber);
 
         general_purpose_regs_[reg_code] = value;
+
+        LOG_TRACE_("Set {} = {}", GetStringReg (reg), value);
     }
 
     GPRValue GetRegValue (GPR reg) const

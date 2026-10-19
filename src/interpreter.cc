@@ -31,25 +31,21 @@ void CpuState::ExecuteBasicBlock (BasicBlock block, RAM& ram)
 
 int ExecuteProgram (BinaryCode& bin_code)
 {
-    CpuState cpu{};
-
-    RAM ram{};
-
-    Cache cache{};
+    Interpreter interpreter{};
 
     try
     {
     while (true) {
         BasicBlock block{};
 
-        PCValue pc = cpu.GetProgramCounter ();
+        PCValue pc = interpreter.cpu_.GetProgramCounter ();
 
         LOG_TRACE_("Trying to prefetch at {}", pc);
 
-        if (cache.Prefetch (pc, block)) {
+        if (interpreter.cache_.Prefetch (pc, block)) {
             LOG_TRACE_("Prefetching Succeeded");
 
-            cpu.ExecuteBasicBlock (block, ram);
+            interpreter.cpu_.ExecuteBasicBlock (block, interpreter.ram_);
 
             continue;
         }
@@ -57,16 +53,16 @@ int ExecuteProgram (BinaryCode& bin_code)
         LOG_TRACE_("Prefetching Failed");
         LOG_TRACE_("Fetching instruction...");
 
-        Word encoding = cpu.Fetch (bin_code);
+        Word encoding = interpreter.cpu_.Fetch (bin_code);
 
         LOG_TRACE_("Fetched {:032b} ({:08X})", encoding, encoding);
         LOG_TRACE_("Decoding instruction...");
 
-        Instruction instr = cpu.Decode (encoding);
+        Instruction instr = interpreter.cpu_.Decode (encoding);
 
-        cache.Add (instr, pc);
+        interpreter.cache_.Add (instr, pc);
 
-        cpu.Execute (instr, ram);
+        interpreter.cpu_.Execute (instr, interpreter.ram_);
     }
     } 
     catch (const GuestExit& exit)

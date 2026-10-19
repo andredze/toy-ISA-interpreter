@@ -2,7 +2,7 @@
 
 //--------------------------------------------------------------------------------
 
-#include "cpu.hpp"
+#include "interpreter.hpp"
 #include <gtest/gtest.h>
 
 //--------------------------------------------------------------------------------
@@ -39,8 +39,9 @@ class NoMemoryUsageNoExceptionsExecutionTest : public ::testing::TestWithParam<T
 
 TEST_P(NoMemoryUsageNoExceptionsExecutionTest, canExecuteInstructionsWithoutMemoryUsageOrExceptions)
 {
-    CpuState cpu{};
-    RAM ram{};
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
+    RAM& ram = inter.ram_;
 
     const TestCpuState& state = GetParam ();
 
@@ -282,8 +283,9 @@ INSTANTIATE_TEST_SUITE_P
 
 TEST(MemoryUsageExecutionTest, canExecuteLdAligned)
 {
-    CpuState cpu{};
-    RAM ram{};
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
+    RAM& ram = inter.ram_;
 
     cpu.SetProgramCounter (0x00);
 
@@ -318,8 +320,9 @@ TEST(MemoryUsageExecutionTest, canExecuteLdAligned)
 
 TEST(MemoryUsageExecutionTest, canThrowFromLdMisAligned)
 {
-    CpuState cpu{};
-    RAM ram{};
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
+    RAM& ram = inter.ram_;
 
     cpu.SetProgramCounter (0x00);
 
@@ -346,9 +349,10 @@ TEST(MemoryUsageExecutionTest, canThrowFromLdMisAligned)
 //--------------------------------------------------------------------------------
 
 TEST(MemoryUsageExecutionTest, canExecuteStAligned)
-{
-    CpuState cpu{};
-    RAM ram{};
+{ 
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
+    RAM& ram = inter.ram_;
 
     cpu.SetProgramCounter (0x00);
 
@@ -383,8 +387,9 @@ TEST(MemoryUsageExecutionTest, canExecuteStAligned)
 
 TEST(MemoryUsageExecutionTest, canThrowFromStMisAligned)
 {
-    CpuState cpu{};
-    RAM ram{};
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
+    RAM& ram = inter.ram_;
 
     cpu.SetProgramCounter (0x00);
 
@@ -412,8 +417,9 @@ TEST(MemoryUsageExecutionTest, canThrowFromStMisAligned)
 
 TEST(MemoryUsageExecutionTest, canExecuteStpAligned)
 {
-    CpuState cpu{};
-    RAM ram{};
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
+    RAM& ram = inter.ram_;
 
     cpu.SetProgramCounter (0x00);
 
@@ -455,8 +461,9 @@ TEST(MemoryUsageExecutionTest, canExecuteStpAligned)
 
 TEST(MemoryUsageExecutionTest, canThrowFromStpMisAligned)
 {
-    CpuState cpu{};
-    RAM ram{};
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
+    RAM& ram = inter.ram_;
 
     cpu.SetProgramCounter (0x00);
 
@@ -489,8 +496,9 @@ TEST(MemoryUsageExecutionTest, canThrowFromStpMisAligned)
 
 TEST(SyscallExecutionTest, canExecuteSyscallExit)
 {
-    CpuState cpu{};
-    RAM ram{};
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
+    RAM& ram = inter.ram_;
 
     cpu.SetProgramCounter (0x00);
 
@@ -508,8 +516,9 @@ TEST(SyscallExecutionTest, canExecuteSyscallExit)
 
 TEST(SyscallExecutionTest, canExecuteSyscallWrite)
 {
-    CpuState cpu{};
-    RAM ram{};
+    Interpreter inter{};
+    CpuState& cpu = inter.cpu_;
+    RAM& ram = inter.ram_;
 
     cpu.SetProgramCounter (0x00);
 
