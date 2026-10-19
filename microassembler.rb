@@ -40,7 +40,7 @@ class InstructionFormat
     def num(&block)
         num_name, num_length = block.call
 
-        @fields << [:reg, num_length, num_name]
+        @fields << [:num, num_length, num_name]
     end
 
     #==================================================
@@ -84,7 +84,7 @@ class MicroAssembler
             return
         end
 
-        @asm_file = File.new(@asm_file_path, "r")
+        @asm_file_lines = File.readlines(@asm_file_path)
         puts "Opened asm file"
 
         @bin_file = File.new(@bin_file_path, "wb")
@@ -96,10 +96,28 @@ class MicroAssembler
     #==================================================
 
     def encode
-        bext("x1", "x2", "x3") 
+        @asm_file_lines.each do |line|
+            # Remove whitespaces
+            line = line.strip
+
+            name, args_str = line.split(/ /, 2)
+
+            if args_str != nil
+                args = args_str.split(", ")
+            end
+
+            puts "Read instruction #{name} with args #{args}"
+
+            send(name, *args)
+        end
+
+        # bext("x1", "x2", "x3") 
+        # li("x8", 60)
+        # syscall() 
 
         # V | Integer | 32-bit unsigned, VAX (little-endian) byte order
-        File.binwrite(@bin_file_path, @instructions.pack("V"))
+        # * for all
+        File.binwrite(@bin_file_path, @instructions.pack("V*"))
     end
 
     #==================================================
@@ -144,7 +162,7 @@ class MicroAssembler
             curr_word_length = 0
 
             format.fields.each do |type, width, field_value|
-                puts "Encoding operand(#{type}, #{width}, #{field_value})"
+                puts "\tEncoding operand(#{type}, #{width}, #{field_value})"
 
                 if type == :num || type == :reg
                     # in case of num or reg, field_value is the name of the register|field in encoding rule
@@ -152,23 +170,26 @@ class MicroAssembler
                     arg_index = operands.index(field_value)
                     curr_arg  = args.fetch(arg_index)
 
-                    puts "from argument[#{arg_index}] = #{curr_arg}"
+                    puts "\t\tfrom argument[#{arg_index}] = #{curr_arg}"
 
                     if type == :reg
                         # get reg encoding from reg name
                         curr_arg = send(curr_arg)
-                        puts "reg = #{curr_arg}"
+                        puts "\t\treg = #{curr_arg}"
+                    elsif type == :num
+                        curr_arg = curr_arg.to_i()
+                        puts "\t\tnum = #{curr_arg}"
                     end
                 elsif type == :bits
                     curr_arg = field_value
-                    puts "bits: #{curr_arg.to_s(2).rjust(width, '0')}"
+                    puts "\t\tbits: #{curr_arg.to_s(2).rjust(width, '0')}"
                 end
 
                 curr_word_length += width
                 word <<= width
                 word |= curr_arg
 
-                puts "word: #{word.to_s(2).rjust(curr_word_length, '0')}"
+                puts "\t\tword: #{word.to_s(2).rjust(curr_word_length, '0')}"
             end
 
             @instructions << word
