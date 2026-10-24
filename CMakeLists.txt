@@ -68,6 +68,7 @@ if (TESTS)
             src/binary_code_input.cc
             src/interpreter.cc
             src/cache.cc
+            src/elf_loader.cc
 
         PUBLIC
             FILE_SET HEADERS

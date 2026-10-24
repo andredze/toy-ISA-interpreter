@@ -1,5 +1,4 @@
 #include <cstdlib>
-#include <iostream>
 #include "interpreter.hpp"
 #include "cpu.hpp"
 #include "error_handle.hpp"
