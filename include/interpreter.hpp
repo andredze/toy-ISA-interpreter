@@ -3,6 +3,7 @@
 //--------------------------------------------------------------------------------
 
 #include "cpu.hpp"
+#include "memory.hpp"
 
 //--------------------------------------------------------------------------------
 
@@ -15,9 +16,14 @@ public:
     CpuState cpu_;
     RAM      ram_;
     Cache    cache_;
+
+    Word Fetch ()
+    {
+        return ram_.LoadWord (cpu_.GetProgramCounter ());
+    }
 };
 
-int ExecuteProgram (BinaryCode& bin_code);
+int ExecuteProgram (const std::string& file_path);
 
 }; // namespace toy_isa_interpreter
 

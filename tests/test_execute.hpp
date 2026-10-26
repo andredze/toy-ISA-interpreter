@@ -7,6 +7,11 @@
 
 //--------------------------------------------------------------------------------
 
+using namespace toy_isa_interpreter;
+
+//--------------------------------------------------------------------------------
+// TODO: пачка инструкций и проверять регистровый файл
+
 struct RegState
 {
     GPR reg;
@@ -134,7 +139,7 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestCpuState {
             .opcode      = Opcode::kRori, 
-            .reg_state1  = {GPR::kX1, 40, (1 << 31)}, 
+            .reg_state1  = {GPR::kX1, 40, (1u << 31)}, 
             .reg_state2  = {GPR::kX2, 1, 1}, 
             .reg_state3  = {GPR::kUnknown, 0, 0}, 
             .imm         = 1,
@@ -143,7 +148,7 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestCpuState {
             .opcode      = Opcode::kRori, 
-            .reg_state1  = {GPR::kX1, 40, (0b101 << 29) | (0b11)}, 
+            .reg_state1  = {GPR::kX1, 40, (0b101u << 29) | (0b11)}, 
             .reg_state2  = {GPR::kX2, 0b0001'1101, 0b0001'1101}, 
             .reg_state3  = {GPR::kUnknown, 0, 0}, 
             .imm         = 3,
@@ -197,8 +202,8 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestCpuState {
             .opcode      = Opcode::kSsat, 
-            .reg_state1  = {GPR::kX1, 77777, -16}, 
-            .reg_state2  = {GPR::kX2, -1000, -1000}, 
+            .reg_state1  = {GPR::kX1, 77777, -16u}, 
+            .reg_state2  = {GPR::kX2, -1000u, -1000u}, 
             .reg_state3  = {GPR::kUnknown, 0, 0}, 
             .imm         = 5,
             .pc_initial  = 0x44,
@@ -224,7 +229,7 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestCpuState {
             .opcode      = Opcode::kAdd, 
-            .reg_state1  = {GPR::kX0, -15, -15}, 
+            .reg_state1  = {GPR::kX0, -15u, -15u}, 
             .reg_state2  = {GPR::kX1, 20, 20}, 
             .reg_state3  = {GPR::kX2, 100, 5}, 
             .imm         = 0,
@@ -234,7 +239,7 @@ INSTANTIATE_TEST_SUITE_P
         TestCpuState {
             .opcode      = Opcode::kCls, 
             .reg_state1  = {GPR::kX0, 77777, 31}, 
-            .reg_state2  = {GPR::kX1, -2, -2}, 
+            .reg_state2  = {GPR::kX1, -2u, -2u}, 
             .reg_state3  = {GPR::kUnknown, 0, 0}, 
             .imm         = 0,
             .pc_initial  = 0x04,
@@ -243,7 +248,7 @@ INSTANTIATE_TEST_SUITE_P
         TestCpuState {
             .opcode      = Opcode::kCls, 
             .reg_state1  = {GPR::kX0, 77777, 32}, 
-            .reg_state2  = {GPR::kX1, -1, -1}, 
+            .reg_state2  = {GPR::kX1, -1u, -1u}, 
             .reg_state3  = {GPR::kUnknown, 0, 0}, 
             .imm         = 0,
             .pc_initial  = 0x04,
@@ -260,7 +265,7 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestCpuState {
             .opcode      = Opcode::kLi, 
-            .reg_state1  = {GPR::kX0, 77777, -1}, 
+            .reg_state1  = {GPR::kX0, 77777, -1u}, 
             .reg_state2  = {GPR::kUnknown, 0, 0}, 
             .reg_state3  = {GPR::kUnknown, 0, 0}, 
             .imm         = 0b1111'1111'1111'1111,

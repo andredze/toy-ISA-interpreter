@@ -1,5 +1,10 @@
 #!/usr/bin/env ruby
 
+require "elftools/structs"
+require "elftools/constants"
+
+#--------------------------------------------------------------------------------
+
 module ToyISA
 
 #--------------------------------------------------------------------------------
@@ -7,6 +12,62 @@ module ToyISA
 ASM_FILE_EXTENSION  = ".s"
 REGISTERS_COUNT     = 32
 REG_ENCODING_LENGTH = 5
+
+OS_ABI_CODE = 188 - 256
+ABI_VERSION = 1
+MACHINE     = 130
+
+#--------------------------------------------------------------------------------
+
+class ElfFile
+    def self.write(path, instructions)
+        # V | Integer | 32-bit unsigned, VAX (little-endian) byte order
+        # * for all
+        code = instructions.pack("V*")
+
+        code_offset  = 0x1000
+        code_address = 0
+
+        segment = ELFTools::Structs::ELF32_Phdr.new(endian: :little)
+
+        segment.p_type   = ELFTools::Constants::PT_LOAD
+        segment.p_flags  = ELFTools::Constants::PF_R | ELFTools::Constants::PF_X
+        segment.p_offset = code_offset
+        segment.p_vaddr  = code_address
+        segment.p_paddr  = code_address
+        segment.p_filesz = code.bytesize
+        segment.p_memsz  = code.bytesize
+
+        header = ELFTools::Structs::ELF_Ehdr.new(endian: :little)
+
+        header.elf_class = 32
+        header.e_ident.magic         = ELFTools::Constants::ELFMAG
+        header.e_ident.ei_class      = 1 # ELFCLASS32
+        header.e_ident.ei_data       = 1 # ELFDATA2LSB
+        header.e_ident.ei_version    = 1 # EV_CURRENT
+        header.e_ident.ei_osabi      = OS_ABI_CODE 
+        header.e_ident.ei_abiversion = ABI_VERSION
+        header.e_ident.ei_padding    = "\0" * 7
+
+        header.e_type    = ELFTools::Constants::ET_EXEC
+        header.e_machine = MACHINE
+        header.e_version = 1
+        header.e_entry   = code_address
+
+        header.e_ehsize    = header.num_bytes
+        header.e_phoff     = header.num_bytes
+        header.e_phentsize = segment.num_bytes
+        header.e_phnum     = 1
+
+        File.open(path, "wb") do |file|
+            file.write(header.to_binary_s)
+            file.write(segment.to_binary_s)
+
+            file.write("\0" * (code_offset - file.pos))
+            file.write(code)
+        end
+    end
+end
 
 #--------------------------------------------------------------------------------
 
@@ -113,9 +174,7 @@ class MicroAssembler
             send(name, *args)
         end
 
-        # V | Integer | 32-bit unsigned, VAX (little-endian) byte order
-        # * for all
-        File.binwrite(@bin_file_path, @instructions.pack("V*"))
+        ElfFile.write(@bin_file_path, @instructions)
     end
 
     #==================================================

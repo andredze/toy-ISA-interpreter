@@ -122,11 +122,6 @@ public:
         return general_purpose_regs_[reg_code];
     }
 
-    Word Fetch (BinaryCode& code) const
-    {
-        return code.GetInstructionEncoding (program_counter_);
-    }
-
     Instruction Decode (Word encoding) const;
 
     void Execute (Instruction instr, RAM& ram);

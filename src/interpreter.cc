@@ -1,9 +1,9 @@
 #include <cstdlib>
 #include "decode.hpp"
-#include "error_handle.hpp"
 #include "cpu.hpp"
 #include "logger.hpp"
 #include "interpreter.hpp"
+#include "elf_loader.hpp"
 #include "memory.hpp"
 #include "cache.hpp"
 
@@ -29,9 +29,17 @@ void CpuState::ExecuteBasicBlock (BasicBlock block, RAM& ram)
 
 //————————————————————————————————————————————————————————————————————————————————
 
-int ExecuteProgram (BinaryCode& bin_code)
+int ExecuteProgram (const std::string& file_path)
 {
     Interpreter interpreter{};
+
+    Word entry{};
+
+    if (!ELF::LoadFile (file_path, interpreter.ram_, &entry)) {
+        return EXIT_FAILURE;
+    }
+
+    interpreter.cpu_.SetProgramCounter (entry);
 
     try
     {
@@ -53,7 +61,7 @@ int ExecuteProgram (BinaryCode& bin_code)
         LOG_TRACE_("Prefetching Failed");
         LOG_TRACE_("Fetching instruction...");
 
-        Word encoding = interpreter.cpu_.Fetch (bin_code);
+        Word encoding = interpreter.Fetch ();
 
         LOG_TRACE_("Fetched {:032b} ({:08X})", encoding, encoding);
         LOG_TRACE_("Decoding instruction...");

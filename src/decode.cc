@@ -13,7 +13,7 @@ namespace toy_isa_interpreter
 
 bool ChangesControlFlow (Opcode opcode)
 {
-    return (opcode == Opcode::kJ) || (opcode == Opcode::kBeq);
+    return (opcode == Opcode::kJ) || (opcode == Opcode::kBeq) || (opcode == Opcode::kSyscall);
 }
 
 //————————————————————————————————————————————————————————————————————————————————

@@ -18,7 +18,8 @@ constexpr std::size_t kSyscallCodeRead  = 0;
 
 //==================================================
 
-using GPRValue = std::int32_t;
+// FIXME: честно uint
+using GPRValue = std::uint32_t;
 using PCValue  = std::uint32_t;
 
 constexpr std::size_t kBitsInByte      = 8;

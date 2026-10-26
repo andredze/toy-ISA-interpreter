@@ -5,6 +5,8 @@ project(toy_ISA_interpreter)
 set(EXECUTABLE anki_interpreter)
 add_executable(${EXECUTABLE})
 
+set(CMAKE_COLOR_DIAGNOSTICS ON)
+
 set(COMMON_FLAGS -fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}/= -std=c++20)
 
 set(RELEASE_FLAGS -DNDEBUG -O3 -march=native -pie -fPIE -flto)
@@ -59,16 +61,20 @@ else()
     )
 endif()
 
+set (CXX_SRC 
+        src/execute.cc
+        src/decode.cc
+        src/binary_code_input.cc
+        src/interpreter.cc
+        src/cache.cc
+        src/elf_loader.cc
+)
+
 if (TESTS)
     target_sources(${EXECUTABLE}
         PRIVATE
             tests/main.cc
-            src/execute.cc
-            src/decode.cc
-            src/binary_code_input.cc
-            src/interpreter.cc
-            src/cache.cc
-            src/elf_loader.cc
+            ${CXX_SRC}
 
         PUBLIC
             FILE_SET HEADERS
@@ -80,12 +86,8 @@ if (TESTS)
 else()
     target_sources(${EXECUTABLE}
         PRIVATE
+            ${CXX_SRC}
             src/main.cc
-            src/execute.cc
-            src/decode.cc
-            src/binary_code_input.cc
-            src/interpreter.cc
-            src/cache.cc
 
         PUBLIC
             FILE_SET HEADERS

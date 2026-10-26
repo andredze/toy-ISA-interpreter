@@ -1,4 +1,5 @@
 #include "elf_loader.hpp"
+#include "memory.hpp"
 #include "elfio/elf_types.hpp"
 #include "error_handle.hpp"
 #include "logger.hpp"
@@ -27,14 +28,16 @@ static bool ValidateHeader (const ELFIO::elfio& reader)
         return false;
     }
 
-    if (reader.get_os_abi () != kOsAbi) {
-        PrintError ("Can only process ELF file with toy ISA ABI with code {}", 
-                    kOsAbi);
+    auto abi = reader.get_os_abi ();
+
+    if (abi != kOsAbi) {
+        PrintError ("Can only process ELF file with toy ISA ABI with code {}, got {}", 
+                    kOsAbi, abi);
         return false;
     }
 
     if (reader.get_abi_version () != kAbiVersion) {
-        PrintError ("Can only process little-endian ELF file");
+        PrintError ("Can only process ELF file with abi version {}", kAbiVersion);
         return false;
     }
 
@@ -84,8 +87,23 @@ static bool ValidateHeader (const ELFIO::elfio& reader)
 
 //--------------------------------------------------------------------------------
 
-bool LoadFile (const std::string& file_path)
+void ValidateSections (const ELFIO::elfio& reader)
 {
+    ELFIO::Elf_Half sections_count = reader.sections.size ();
+
+    if (sections_count != 0) {
+        std::cerr << "[WARNING] Interpreter can't load sections, "
+                  << "however given ELF file contains " 
+                  << sections_count << "sections\n";
+    }
+}
+
+//--------------------------------------------------------------------------------
+
+bool LoadFile (const std::string& file_path, RAM& ram, Word* entry_dest)
+{
+    assert (entry_dest != nullptr);
+
     ELFIO::elfio reader {};
 
     if (!reader.load (file_path)) {
@@ -97,13 +115,7 @@ bool LoadFile (const std::string& file_path)
         return false;
     }
 
-    ELFIO::Elf_Half sections_count = reader.sections.size ();
-
-    if (sections_count != 0) {
-        std::cerr << "[WARNING] Interpreter can't load sections, "
-                  << "however given ELF file " << file_path 
-                  << "contains " << sections_count << "sections\n";
-    }
+    ValidateSections (reader);
 
     ELFIO::Elf_Half segments_count = reader.segments.size ();
 
@@ -113,6 +125,61 @@ bool LoadFile (const std::string& file_path)
     }
 
     const ELFIO::segment* segment = reader.segments[0];
+
+    if (segment->get_type () != ELFIO::PT_LOAD) {
+        PrintError ("Interpreter can only load segments with PT_LOAD type");
+        return false;
+    }
+
+    if (segment->get_flags () != (ELFIO::PF_R | ELFIO::PF_X)) {
+        PrintError ("ELF file segment does not have permission "
+                    "for reading and executing PF_R | PF_X");
+        return false;
+    }
+
+    const ELFIO::Elf_Xword file_size = segment->get_file_size ();
+    const ELFIO::Elf_Xword mem_size  = segment->get_memory_size ();
+
+    if (file_size > mem_size) {
+        PrintError ("ELF file segment 0 has file_size > memory_size");
+        return false;
+    }
+    
+    const ELFIO::Elf64_Addr address = segment->get_virtual_address ();
+
+    const std::size_t ram_cap = ram.GetCapacity ();
+
+    if (address > ram_cap || mem_size > ram_cap - address) {
+        PrintError ("ELF file loading failed: "
+                    "segment does not fit in interpreter's ram");
+        return false;
+    }
+
+    const char* data = segment->get_data ();
+
+    if (file_size != 0) {
+        if (data == nullptr) {
+            PrintError ("ELF file missing segment data");
+            return false;
+        }
+
+        ram.Store (static_cast<Word>(address), data, file_size);
+    }
+
+    if (mem_size > file_size) {
+        ram.Set (static_cast<Word>(address + file_size), 
+                 0, 
+                 mem_size - file_size);
+    }
+
+    const auto entry = reader.get_entry ();
+
+    if (!ram.IsAligned (static_cast<Word>(entry)) || entry > ram_cap) {
+        PrintError ("Invalid entry point");
+        return false;
+    }
+
+    *entry_dest = static_cast<Word>(entry);
 
     return true;
 }

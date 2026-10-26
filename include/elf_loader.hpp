@@ -1,5 +1,10 @@
+#pragma once
+
+//--------------------------------------------------------------------------------
+
 #include "elfio/elf_types.hpp"
 #include <elfio/elfio.hpp>
+#include "memory.hpp"
 
 //--------------------------------------------------------------------------------
 
@@ -19,7 +24,7 @@ constexpr unsigned char   kAbiVersion  = 1;
 
 //--------------------------------------------------------------------------------
 
-bool LoadELfFile (const std::string& file_path);
+bool LoadFile (const std::string& file_path, RAM& ram, Word* entry_dest);
 
 //--------------------------------------------------------------------------------
 

@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include "elf_loader.hpp"
 #include "interpreter.hpp"
 #include "cpu.hpp"
 #include "error_handle.hpp"
@@ -6,13 +7,13 @@
 
 //--------------------------------------------------------------------------------
 
-int main(int argc, char** argv)
+int main (int argc, char** argv)
 {
     if (argc != 2)
     {
         error_handle::PrintError (
-            "Error: you must provide an input file\n"
-            "Usage: {} <binary_filename>", 
+            "Wrong arguments\n"
+            "Usage: {} <elf_file>", 
             toy_isa_interpreter::kExecutableFileName);
 
         return EXIT_SUCCESS;
@@ -22,17 +23,9 @@ int main(int argc, char** argv)
 
     //==================================================
 
-    toy_isa_interpreter::BinaryCode bin_code {}; 
+    std::string file_path = argv[1];
 
-    if (!bin_code.ReadFile (argv[1])) {
-        return EXIT_FAILURE;
-    }
-
-    LOG_TRACE_("Read file {}", argv[1]);
-
-    //==================================================
-
-    return toy_isa_interpreter::ExecuteProgram (bin_code);
+    return toy_isa_interpreter::ExecuteProgram (file_path);
 } 
 
 //--------------------------------------------------------------------------------
