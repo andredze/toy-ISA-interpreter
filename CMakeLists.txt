@@ -7,6 +7,25 @@ add_executable(${EXECUTABLE} src/main.cc)
 
 set(CMAKE_COLOR_DIAGNOSTICS ON)
 
+add_custom_target(build_ir
+    COMMAND make -C "${CMAKE_CURRENT_SOURCE_DIR}/ir" ./libir.a
+    BYPRODUCTS "${CMAKE_CURRENT_SOURCE_DIR}/ir/libir.a"
+    VERBATIM
+)
+
+add_dependencies(${EXECUTABLE} build_ir)
+
+target_include_directories(${EXECUTABLE} PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/ir"
+)
+
+target_link_libraries(${EXECUTABLE} PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/ir/libir.a"
+    capstone
+    m
+    ${CMAKE_DL_LIBS}
+)
+
 set(COMMON_FLAGS -fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}/= -std=c++20)
 
 set(RELEASE_FLAGS -DNDEBUG -O3 -march=native -pie -fPIE -flto)
