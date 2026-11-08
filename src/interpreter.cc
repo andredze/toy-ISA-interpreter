@@ -1,6 +1,6 @@
 #include <cstdlib>
 #include "decode.hpp"
-#include "../ir/ir.h"
+#include <ir.h>
 #include "cpu.hpp"
 #include "logger.hpp"
 #include "interpreter.hpp"
@@ -68,7 +68,7 @@ int ExecuteProgram (const std::string& file_path)
 
         std::size_t size{};
 
-        void* entry{} = ir_jit_compile (&ctx, kOptimizationLevel, &size);
+        void* entry = ir_jit_compile (&ctx, kOptimizationLevel, &size);
 
         if (entry) {
             reinterpret_cast<FuncExecuteTranslatedInstr> (entry) ();
@@ -80,6 +80,7 @@ int ExecuteProgram (const std::string& file_path)
                     interpreter.cpu_.GetRegValue(GPR::kX1),
                     interpreter.cpu_.GetRegValue(GPR::kX2));
 
+        break;
 #if 0
         BasicBlock block{};
 

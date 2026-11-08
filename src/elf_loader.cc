@@ -1,6 +1,6 @@
 #include "elf_loader.hpp"
 #include "memory.hpp"
-#include "elfio/elf_types.hpp"
+#include <elfio/elf_types.hpp>
 #include "error_handle.hpp"
 #include "logger.hpp"
 
@@ -9,7 +9,7 @@
 namespace toy_isa_interpreter
 {
 
-namespace ELF 
+namespace ELF
 {
 
 using error_handle::PrintError;
@@ -31,7 +31,7 @@ static bool ValidateHeader (const ELFIO::elfio& reader)
     auto abi = reader.get_os_abi ();
 
     if (abi != kOsAbi) {
-        PrintError ("Can only process ELF file with toy ISA ABI with code {}, got {}", 
+        PrintError ("Can only process ELF file with toy ISA ABI with code {}, got {}",
                     kOsAbi, abi);
         return false;
     }
@@ -47,7 +47,7 @@ static bool ValidateHeader (const ELFIO::elfio& reader)
     }
 
     if (reader.get_machine () != kMachineCode) {
-        PrintError ("Can only process toy ISA ELF files with machine code {}", 
+        PrintError ("Can only process toy ISA ELF files with machine code {}",
                     kMachineCode);
         return false;
     }
@@ -93,7 +93,7 @@ void ValidateSections (const ELFIO::elfio& reader)
 
     if (sections_count != 0) {
         std::cerr << "[WARNING] Interpreter can't load sections, "
-                  << "however given ELF file contains " 
+                  << "however given ELF file contains "
                   << sections_count << "sections\n";
     }
 }
@@ -144,7 +144,7 @@ bool LoadFile (const std::string& file_path, RAM& ram, Word* entry_dest)
         PrintError ("ELF file segment 0 has file_size > memory_size");
         return false;
     }
-    
+
     const ELFIO::Elf64_Addr address = segment->get_virtual_address ();
 
     const std::size_t ram_cap = ram.GetCapacity ();
@@ -167,8 +167,8 @@ bool LoadFile (const std::string& file_path, RAM& ram, Word* entry_dest)
     }
 
     if (mem_size > file_size) {
-        ram.Set (static_cast<Word>(address + file_size), 
-                 0, 
+        ram.Set (static_cast<Word>(address + file_size),
+                 0,
                  mem_size - file_size);
     }
 

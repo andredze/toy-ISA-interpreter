@@ -122,6 +122,15 @@ public:
         return general_purpose_regs_[reg_code];
     }
 
+    GPRValue* GetRegPointer (GPR reg)
+    {
+        unsigned reg_code = static_cast<unsigned>(reg);
+
+        assert (reg_code < kGeneralPurposeRegistersNumber);
+
+        return &general_purpose_regs_[reg_code];
+    }
+
     Instruction Decode (Word encoding) const;
 
     void Execute (Instruction instr, RAM& ram);

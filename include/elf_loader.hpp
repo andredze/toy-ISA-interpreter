@@ -2,7 +2,7 @@
 
 //--------------------------------------------------------------------------------
 
-#include "elfio/elf_types.hpp"
+#include <elfio/elf_types.hpp>
 #include <elfio/elfio.hpp>
 #include "memory.hpp"
 
