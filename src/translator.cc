@@ -399,8 +399,8 @@ static void GenerateSsat (Interpreter& interp, ir_ctx* ctx, Instruction& instr, 
 
     ir_ref val = ir_LOAD_U32 (src_addr);
 
-    val = ir_MAX_I32 (val, ir_CONST_I32 (max_value));
-    val = ir_MIN_I32 (val, ir_CONST_I32 (min_value));
+    val = ir_MIN_I32 (val, ir_CONST_I32 (max_value));
+    val = ir_MAX_I32 (val, ir_CONST_I32 (min_value));
 
     ir_STORE (dest_addr, val);
 }

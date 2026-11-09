@@ -133,13 +133,6 @@ static enum Opcode GetOpcode (Word encoding)
 
 //--------------------------------------------------------------------------------
 
-constexpr uint8_t GetFieldWidth (FieldLocation location)
-{
-    return location.end_pos_ - location.start_pos_ + 1u;
-}
-
-//--------------------------------------------------------------------------------
-
 static Word GetField (Word encoding, FieldLocation location)
 {
     assert (location.end_pos_ <= sizeof(Word) * 8);

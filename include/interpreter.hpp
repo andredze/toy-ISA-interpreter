@@ -59,7 +59,7 @@ public:
     }
 };
 
-int ExecuteProgram (const std::string& file_path);
+int ExecuteProgram (const std::string& file_path, std::size_t bb_translation_threshold);
 
 }; // namespace toy_isa_interpreter
 

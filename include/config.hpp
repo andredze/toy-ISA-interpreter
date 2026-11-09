@@ -16,7 +16,7 @@ using Word = std::uint32_t;
 using Byte = std::uint8_t;
 
 constexpr int kOptimizationLevel = 2;
-constexpr int kBBTranslationThreshold = 1;
+constexpr std::size_t kBBTranslationThresholdDefault = 10;
 
 constexpr std::string_view kDotDir = "dot";
 constexpr std::string_view kSvgDir = "svg";

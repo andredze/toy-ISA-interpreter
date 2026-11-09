@@ -31,7 +31,7 @@ void CpuState::ExecuteBasicBlock (BasicBlock block, RAM& ram)
 
 //————————————————————————————————————————————————————————————————————————————————
 
-int ExecuteProgram (const std::string& file_path)
+int ExecuteProgram (const std::string& file_path, std::size_t bb_translation_threshold)
 {
 #ifdef LOGGING
     std::string command1 = std::format ("mkdir -p {}", kDotDir);
@@ -59,6 +59,7 @@ int ExecuteProgram (const std::string& file_path)
 
         PCValue pc = interpreter.cpu_.GetProgramCounter ();
 
+#ifndef INTERPRETER_ONLY
         LOG_TRACE_("Trying to lookup BT at {}", pc);
 
         if (interpreter.bt_cache_.Lookup (pc, bt_block)) {
@@ -70,16 +71,19 @@ int ExecuteProgram (const std::string& file_path)
             continue;
         }
         LOG_TRACE_("No BT hit");
+#endif
 
         LOG_TRACE_("Trying to lookup BB at {}", pc);
 
         if (interpreter.bb_cache_.Lookup (pc, bb_block)) {
             LOG_TRACE_("Hit in BBCache");
+
+#ifndef INTERPRETER_ONLY
             LOG_TRACE_("BB block exec_count = {}", bb_block.exec_count_);
 
-            if (bb_block.exec_count_ >= kBBTranslationThreshold) {
+            if (bb_block.exec_count_ >= bb_translation_threshold) {
                 LOG_TRACE_("BB block exec_count reached threshold {}, translating...",
-                           kBBTranslationThreshold);
+                           bb_translation_threshold);
 
                 bt_block = TranslateBasicBlock (interpreter, bb_block, pc);
                 interpreter.bt_cache_.Add (pc, bt_block);
@@ -89,15 +93,18 @@ int ExecuteProgram (const std::string& file_path)
                 interpreter.CallTranslatedBlock (pc, bt_block);
             }
             else {
+#endif
                 LOG_TRACE_("Interpreting BB block");
 
                 interpreter.cpu_.ExecuteBasicBlock (bb_block, interpreter.ram_);
 
+#ifndef INTERPRETER_ONLY
                 LOG_TRACE_("Incrementing exec_count {}",
                            interpreter.bb_cache_.map_[pc].exec_count_);
                 // FIXME: not address cache second time
                 interpreter.bb_cache_.map_[pc].exec_count_++;
             }
+#endif
 
             continue;
         }

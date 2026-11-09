@@ -116,7 +116,10 @@ struct FieldLocation
 
 //==================================================
 
-constexpr uint8_t GetFieldWidth (FieldLocation location);
+constexpr uint8_t GetFieldWidth (FieldLocation location)
+{
+    return location.end_pos_ - location.start_pos_ + 1u;
+}
 
 //==================================================
 

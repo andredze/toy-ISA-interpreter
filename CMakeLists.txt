@@ -5,6 +5,12 @@ project(toy_ISA_interpreter)
 set(EXECUTABLE interpreter)
 add_executable(${EXECUTABLE})
 
+option(INTERPRETER_ONLY "Disable JIT translation" OFF)
+
+if(INTERPRETER_ONLY)
+    target_compile_definitions(${EXECUTABLE} PRIVATE INTERPRETER_ONLY)
+endif()
+
 set(CMAKE_COLOR_DIAGNOSTICS ON)
 set(IR_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ir")
 set(IR_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/ir")

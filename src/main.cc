@@ -9,15 +9,23 @@
 
 int main (int argc, char** argv)
 {
-    if (argc != 2)
+    if (argc < 2)
     {
         error_handle::PrintError (
             "Wrong arguments\n"
-            "Usage: {} <elf_file>", 
+            "Usage: {} <elf_file>",
             toy_isa_interpreter::kExecutableFileName);
 
         return EXIT_SUCCESS;
     }
+
+    std::size_t bb_translation_threshold = toy_isa_interpreter::kBBTranslationThresholdDefault;
+
+#ifndef INTERPRETER_ONLY
+    if (argc == 3) {
+        bb_translation_threshold = std::atol (argv[2]);
+    }
+#endif
 
     LOG_TRACE_("Entered interpreter");
 
@@ -25,7 +33,7 @@ int main (int argc, char** argv)
 
     std::string file_path = argv[1];
 
-    return toy_isa_interpreter::ExecuteProgram (file_path);
-} 
+    return toy_isa_interpreter::ExecuteProgram (file_path, bb_translation_threshold);
+}
 
 //--------------------------------------------------------------------------------
