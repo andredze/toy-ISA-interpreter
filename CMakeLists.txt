@@ -28,7 +28,7 @@ add_dependencies(${EXECUTABLE} build_ir)
 
 target_include_directories(${EXECUTABLE} SYSTEM PRIVATE
     "${IR_SOURCE_DIR}"
-    "${CMAKE_CURRENT_SOURCE_DIR}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/elfio"
 )
 
 target_link_libraries(${EXECUTABLE} PRIVATE
