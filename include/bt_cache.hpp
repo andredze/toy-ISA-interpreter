@@ -32,6 +32,9 @@ private:
     BTCacheMap map_;
 
 public:
+    BTCache  () = default;
+    ~BTCache ();
+
     std::size_t GetSize () const
     {
         return map_.size ();

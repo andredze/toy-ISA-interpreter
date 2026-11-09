@@ -1,10 +1,22 @@
 #include "bt_cache.hpp"
 #include <cassert>
+#include <ir.h>
 
 //--------------------------------------------------------------------------------
 
 namespace toy_isa_interpreter
 {
+
+//--------------------------------------------------------------------------------
+
+BTCache::~BTCache ()
+{
+    for (auto it = map_.begin (), it_end = map_.end (); it != it_end; ++it) {
+        BlockTranslated& bt = it->second;
+        assert (bt.entry_);
+        ir_mem_unmap (reinterpret_cast<void*>(bt.entry_), bt.size_);
+    }
+}
 
 //--------------------------------------------------------------------------------
 
