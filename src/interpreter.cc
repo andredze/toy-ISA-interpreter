@@ -65,7 +65,7 @@ int ExecuteProgram (const std::string& file_path)
             LOG_TRACE_("Hit in BTCache");
             LOG_TRACE_("Executing BT block");
 
-            bt_block.entry_ ();
+            interpreter.CallTranslatedBlock (pc, bt_block);
 
             continue;
         }
@@ -85,7 +85,8 @@ int ExecuteProgram (const std::string& file_path)
                 interpreter.bt_cache_.Add (pc, bt_block);
 
                 LOG_TRACE_("Cached BT, executing");
-                bt_block.entry_ ();
+
+                interpreter.CallTranslatedBlock (pc, bt_block);
             }
             else {
                 LOG_TRACE_("Interpreting BB block");

@@ -23,6 +23,7 @@ constexpr std::string_view kSvgDir = "svg";
 constexpr std::string_view kDotFileName = "bt";
 
 constexpr std::size_t kWordSizeInBits = sizeof(Word) * 8;
+constexpr std::size_t kAlignmentZeroBitsCount = 2;
 
 }; // namespace toy_isa_interpreter
 

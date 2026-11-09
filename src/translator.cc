@@ -43,9 +43,13 @@ static void GenerateBasicBlock (Interpreter& interp, ir_ctx* ctx, BasicBlock& bb
     ir_STORE (pc_addr, ir_CONST_U32 (advanced_pc));
 
     // handle last instruction that changes control flow
-    GenerateInstr (interp, ctx, bb_block.instrs_[size - 1], advanced_pc);
+    Instruction& last_instr = bb_block.instrs_[size - 1];
 
-    ir_RETURN (IR_UNUSED);
+    GenerateInstr (interp, ctx, last_instr, advanced_pc);
+
+    if (last_instr.opcode_ != Opcode::kSyscall) {
+        ir_RETURN (ir_CONST_I32 (static_cast<int>(TranslatedCodeStatus::kOk)));
+    }
 }
 
 //====================================
@@ -94,6 +98,115 @@ BlockTranslated TranslateBasicBlock (Interpreter& interp, BasicBlock& basic_bloc
     BlockTranslated block{reinterpret_cast<TranslatedFunc>(code_entry), code_size};
 
     return block;
+}
+
+//————————————————————————————————————————————————————————————————————————————————
+
+static void GenerateSyscall (Interpreter& interp, ir_ctx* ctx, Instruction& instr, PCValue pc)
+{
+    assert (ctx);
+    assert (instr.opcode_ == Opcode::kSyscall);
+
+    ir_RETURN (ir_CONST_I32 (static_cast<int>(TranslatedCodeStatus::kSyscall)));
+}
+
+//————————————————————————————————————————————————————————————————————————————————
+
+static void GenerateBext (Interpreter& interp, ir_ctx* ctx, Instruction& instr, PCValue pc)
+{
+    // X[reg1] ← bit_extract(X[reg2], X[reg3])
+    assert (ctx);
+    assert (instr.opcode_ == Opcode::kBext);
+
+    ir_ref mask_addr = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg3_));
+    ir_ref data_addr = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg2_));
+    ir_ref dest_addr = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg1_));
+
+    ir_ref data = ir_LOAD_U32 (data_addr);
+    ir_ref mask = ir_LOAD_U32 (mask_addr);
+
+    ir_ref packed_bits = ir_VAR (IR_U32, "packed");
+
+    for (int i = kWordSizeInBits - 1; i >= 0; --i) {
+        // bit = (value >> i) & 1u);
+        ir_ref data_bit = ir_AND_U32 (ir_SHR_U32 (data, ir_CONST_U32 (i)), ir_CONST_U32 (1u));
+        ir_ref mask_bit = ir_AND_U32 (ir_SHR_U32 (mask, ir_CONST_U32 (i)), ir_CONST_U32 (1u));
+
+        // packed = (packed << mask_bit) | (data_bit & mask_bit);
+        // when mask_bit = 1, it shifts once and appends the result_bit
+        // when mask_bit = 0, shift does not happen and the result_bit is 0
+
+        ir_ref packed_bits = ir_OR_U32 (ir_SHL_U32 (packed_bits, mask_bit),
+                                        ir_AND_U32 (data_bit, mask_bit));
+    }
+
+    ir_STORE (dest_addr, packed_bits);
+}
+
+//————————————————————————————————————————————————————————————————————————————————
+
+static void GenerateLd (Interpreter& interp, ir_ctx* ctx, Instruction& instr, PCValue pc)
+{
+    assert (ctx);
+    assert (instr.opcode_ == Opcode::kLd);
+
+    ir_ref base_addr = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg1_));
+
+    ir_ref base = ir_LOAD_U32 (base_addr);
+    ir_ref imm  = ir_CONST_U32 (SignExtend (instr.imm_, GetFieldWidth (kLdImmediateFieldLocation)));
+
+    ir_ref addr = ir_ADD_U32 (base, imm);
+
+    // if addr % sizeof (Word) == 0
+    ir_ref last_bits = ir_SHL_U32 (addr, ir_CONST_U32 (kWordSizeInBits - kAlignmentZeroBitsCount));
+
+    ir_ref cond = ir_IF (ir_EQ (last_bits, ir_CONST_U32 (0)));
+
+    ir_IF_FALSE (cond);
+        ir_RETURN (ir_CONST_I32 (static_cast<int>(TranslatedCodeStatus::kMisalignedAccess)));
+
+    ir_IF_TRUE (cond);
+        ir_ref mem_start_addr = ir_CONST_ADDR (interp.ram_.GetDataPointer ());
+        ir_ref mem_src_addr   = ir_ADD_A (mem_start_addr, ir_ZEXT_A (addr));
+
+        // FIXME: check bounds of memory
+        ir_ref value = ir_LOAD_U32 (mem_src_addr);
+
+        ir_ref dest_addr = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg2_));
+        ir_STORE (dest_addr, value);
+}
+
+//————————————————————————————————————————————————————————————————————————————————
+
+static void GenerateSt (Interpreter& interp, ir_ctx* ctx, Instruction& instr, PCValue pc)
+{
+    assert (ctx);
+    assert (instr.opcode_ == Opcode::kSt);
+
+    ir_ref base_addr = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg1_));
+
+    ir_ref base = ir_LOAD_U32 (base_addr);
+    ir_ref imm  = ir_CONST_U32 (SignExtend (instr.imm_, GetFieldWidth (kLdImmediateFieldLocation)));
+
+    ir_ref addr = ir_ADD_U32 (base, imm);
+
+    // if addr % sizeof (Word) == 0
+    ir_ref last_bits = ir_SHL_U32 (addr, ir_CONST_U32 (kWordSizeInBits - kAlignmentZeroBitsCount));
+
+    ir_ref cond = ir_IF (ir_EQ (last_bits, ir_CONST_U32 (0)));
+
+    ir_IF_FALSE (cond);
+        ir_RETURN (ir_CONST_I32 (static_cast<int>(TranslatedCodeStatus::kMisalignedAccess)));
+
+    ir_IF_TRUE (cond);
+        ir_ref mem_start_addr = ir_CONST_ADDR (interp.ram_.GetDataPointer ());
+        ir_ref mem_dest_addr  = ir_ADD_A (mem_start_addr, ir_ZEXT_A (addr));
+
+        ir_ref src_addr = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg2_));
+        ir_ref value    = ir_LOAD_U32 (src_addr);
+
+        // FIXME: check bounds of memory
+        ir_STORE (mem_dest_addr, value);
 }
 
 //————————————————————————————————————————————————————————————————————————————————
@@ -185,6 +298,47 @@ static void GenerateAddi (Interpreter& interp, ir_ctx* ctx, Instruction& instr, 
 
 //————————————————————————————————————————————————————————————————————————————————
 
+static void GenerateStp (Interpreter& interp, ir_ctx* ctx, Instruction& instr, PCValue pc)
+{
+    assert (ctx);
+    assert (instr.opcode_ == Opcode::kStp);
+
+    ir_ref base_addr = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg1_));
+
+    ir_ref base = ir_LOAD_U32 (base_addr);
+    ir_ref imm  = ir_CONST_U32 (SignExtend (instr.imm_, GetFieldWidth (kLdImmediateFieldLocation)));
+
+    ir_ref addr = ir_ADD_U32 (base, imm);
+
+    // if addr % sizeof (Word) == 0
+    ir_ref last_bits = ir_SHL_U32 (addr, ir_CONST_U32 (kWordSizeInBits - kAlignmentZeroBitsCount));
+
+    ir_ref cond = ir_IF (ir_EQ (last_bits, ir_CONST_U32 (0)));
+
+    ir_IF_FALSE (cond);
+        ir_RETURN (ir_CONST_I32 (static_cast<int>(TranslatedCodeStatus::kMisalignedAccess)));
+
+    ir_IF_TRUE (cond);
+        ir_ref mem_start_addr = ir_CONST_ADDR (interp.ram_.GetDataPointer ());
+
+        ir_ref mem_dest1_addr = ir_ADD_A (mem_start_addr, ir_ZEXT_A (addr));
+        ir_ref mem_dest2_addr = ir_ADD_A (mem_dest1_addr, ir_CONST_ADDR (sizeof (Word)));
+
+        ir_ref src1_addr = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg2_));
+        ir_ref value1 = ir_LOAD_U32 (src1_addr);
+
+        // FIXME: check bounds of memory
+        ir_STORE (mem_dest1_addr, value1);
+
+        ir_ref src2_addr = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg3_));
+        ir_ref value2 = ir_LOAD_U32 (src2_addr);
+
+        // FIXME: check bounds of memory
+        ir_STORE (mem_dest2_addr, value2);
+}
+
+//————————————————————————————————————————————————————————————————————————————————
+
 static void GenerateXor (Interpreter& interp, ir_ctx* ctx, Instruction& instr, PCValue pc)
 {
     assert (ctx);
@@ -226,6 +380,29 @@ static void GenerateMovn (Interpreter& interp, ir_ctx* ctx, Instruction& instr, 
         ir_ref end2 = ir_END ();
 
     ir_MERGE_2 (end1, end2);
+}
+
+//————————————————————————————————————————————————————————————————————————————————
+
+static void GenerateSsat (Interpreter& interp, ir_ctx* ctx, Instruction& instr, PCValue pc)
+{
+    assert (ctx);
+    assert (instr.opcode_ == Opcode::kSsat);
+
+    auto bits_count = instr.imm_;
+
+    auto max_value = (1 << (bits_count - 1)) - 1;
+    auto min_value = - (1 << (bits_count - 1));
+
+    ir_ref src_addr  = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg2_));
+    ir_ref dest_addr = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg1_));
+
+    ir_ref val = ir_LOAD_U32 (src_addr);
+
+    val = ir_MAX_I32 (val, ir_CONST_I32 (max_value));
+    val = ir_MIN_I32 (val, ir_CONST_I32 (min_value));
+
+    ir_STORE (dest_addr, val);
 }
 
 //————————————————————————————————————————————————————————————————————————————————
@@ -285,24 +462,18 @@ static void GenerateInstr (Interpreter& interp, ir_ctx* ctx, Instruction& instr,
 
     switch (instr.opcode_)
     {
-#if 0
     case Opcode::kSyscall: GenerateSyscall (interp, ctx, instr, pc); break;
     case Opcode::kBext:    GenerateBext    (interp, ctx, instr, pc); break;
     case Opcode::kLd:      GenerateLd      (interp, ctx, instr, pc); break;
     case Opcode::kSt:      GenerateSt      (interp, ctx, instr, pc); break;
-#endif
     case Opcode::kBeq:     GenerateBeq     (interp, ctx, instr, pc); break;
     case Opcode::kJ:       GenerateJ       (interp, ctx, instr, pc); break;
     case Opcode::kRori:    GenerateRori    (interp, ctx, instr, pc); break;
     case Opcode::kAddi:    GenerateAddi    (interp, ctx, instr, pc); break;
-#if 0
     case Opcode::kStp:     GenerateStp     (interp, ctx, instr, pc); break;
-#endif
     case Opcode::kXor:     GenerateXor     (interp, ctx, instr, pc); break;
     case Opcode::kMovn:    GenerateMovn    (interp, ctx, instr, pc); break;
-#if 0
     case Opcode::kSsat:    GenerateSsat    (interp, ctx, instr, pc); break;
-#endif
     case Opcode::kAdd:     GenerateAdd     (interp, ctx, instr, pc); break;
     case Opcode::kCls:     GenerateCls     (interp, ctx, instr, pc); break;
     case Opcode::kLi:      GenerateLi      (interp, ctx, instr, pc); break;

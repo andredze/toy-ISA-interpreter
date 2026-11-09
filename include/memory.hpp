@@ -21,7 +21,6 @@ constexpr std::size_t kRamSize = 1024 * 1024;
 
 //==================================================
 
-// FIXME: вместо загрузки по Word, делать memcpy
 class RAM
 {
 private:
@@ -31,6 +30,7 @@ private:
     void CheckAlignment (Word address) const
     {
         if (!IsAligned (address)) {
+            ThrowMisalignedAccess ();
             throw std::runtime_error ("Misaligned address");
         }
     }
@@ -48,6 +48,16 @@ public:
     ~RAM ()
     {
         delete [] data_;
+    }
+
+    void ThrowMisalignedAccess () const
+    {
+        throw std::runtime_error ("MisalignedAccess");
+    }
+
+    Byte* GetDataPointer ()
+    {
+        return data_;
     }
 
     std::size_t GetCapacity () const

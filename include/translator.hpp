@@ -10,7 +10,7 @@
 namespace toy_isa_interpreter
 {
 
-//------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------
 
 BlockTranslated TranslateBasicBlock (Interpreter& interp, BasicBlock& basic_block, PCValue pc);
 
