@@ -145,6 +145,91 @@ static void GenerateJ (Interpreter& interp, ir_ctx* ctx, Instruction& instr, PCV
 
 //————————————————————————————————————————————————————————————————————————————————
 
+static void GenerateRori (Interpreter& interp, ir_ctx* ctx, Instruction& instr, PCValue pc)
+{
+    assert (ctx);
+    assert (instr.opcode_ == Opcode::kRori);
+
+    ir_ref src_addr  = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg2_));
+    ir_ref dest_addr = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg1_));
+    ir_ref imm       = ir_CONST_U32  (
+        SignExtend (instr.imm_, GetFieldWidth (kAddiImmediateFieldLocation))
+    );
+
+    ir_ref src = ir_LOAD_U32 (src_addr);
+
+    src = ir_ROR_U32 (src, imm);
+
+    ir_STORE (dest_addr, src);
+}
+
+//————————————————————————————————————————————————————————————————————————————————
+
+static void GenerateAddi (Interpreter& interp, ir_ctx* ctx, Instruction& instr, PCValue pc)
+{
+    assert (ctx);
+    assert (instr.opcode_ == Opcode::kAddi);
+
+    ir_ref src_addr  = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg1_));
+    ir_ref dest_addr = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg2_));
+    ir_ref imm       = ir_CONST_U32  (
+        SignExtend (instr.imm_, GetFieldWidth (kAddiImmediateFieldLocation))
+    );
+
+    ir_ref src = ir_LOAD_U32 (src_addr);
+
+    src = ir_ADD_U32 (src, imm);
+
+    ir_STORE (dest_addr, src);
+}
+
+//————————————————————————————————————————————————————————————————————————————————
+
+static void GenerateXor (Interpreter& interp, ir_ctx* ctx, Instruction& instr, PCValue pc)
+{
+    assert (ctx);
+    assert (instr.opcode_ == Opcode::kXor);
+
+    ir_ref x_addr   = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg1_));
+    ir_ref y_addr   = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg2_));
+    ir_ref res_addr = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg3_));
+
+    ir_ref x = ir_LOAD_U32 (x_addr);
+    ir_ref y = ir_LOAD_U32 (y_addr);
+
+    x = ir_XOR_U32 (x, y);
+
+    ir_STORE (res_addr, x);
+}
+
+//————————————————————————————————————————————————————————————————————————————————
+
+static void GenerateMovn (Interpreter& interp, ir_ctx* ctx, Instruction& instr, PCValue pc)
+{
+    assert (ctx);
+    assert (instr.opcode_ == Opcode::kMovn);
+
+    ir_ref cond_addr = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg2_));
+    ir_ref src_addr  = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg1_));
+    ir_ref dest_addr = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg3_));
+
+    ir_ref cond_val = ir_LOAD_U32 (cond_addr);
+
+    ir_ref cond = ir_IF (ir_NE (cond_val, ir_CONST_U32 (0)));
+
+    ir_IF_TRUE (cond);
+        ir_ref src = ir_LOAD_U32 (src_addr);
+        ir_STORE (dest_addr, src);
+        ir_ref end1 = ir_END ();
+
+    ir_IF_FALSE (cond);
+        ir_ref end2 = ir_END ();
+
+    ir_MERGE_2 (end1, end2);
+}
+
+//————————————————————————————————————————————————————————————————————————————————
+
 static void GenerateAdd (Interpreter& interp, ir_ctx* ctx, Instruction& instr, PCValue pc)
 {
     assert (ctx);
@@ -160,6 +245,22 @@ static void GenerateAdd (Interpreter& interp, ir_ctx* ctx, Instruction& instr, P
     x = ir_ADD_U32 (x, y);
 
     ir_STORE (res_addr, x);
+}
+
+//————————————————————————————————————————————————————————————————————————————————
+
+static void GenerateCls (Interpreter& interp, ir_ctx* ctx, Instruction& instr, PCValue pc)
+{
+    assert (ctx);
+    assert (instr.opcode_ == Opcode::kCls);
+
+    ir_ref src_addr  = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg2_));
+    ir_ref dest_addr = ir_CONST_ADDR (interp.cpu_.GetRegPointer (instr.reg1_));
+
+    ir_ref val = ir_LOAD_U32 (src_addr);
+    ir_ref res = ir_CTLZ_U32 (ir_NOT_U32 (val));
+
+    ir_STORE (dest_addr, res);
 }
 
 //————————————————————————————————————————————————————————————————————————————————
@@ -192,18 +293,18 @@ static void GenerateInstr (Interpreter& interp, ir_ctx* ctx, Instruction& instr,
 #endif
     case Opcode::kBeq:     GenerateBeq     (interp, ctx, instr, pc); break;
     case Opcode::kJ:       GenerateJ       (interp, ctx, instr, pc); break;
-#if 0
     case Opcode::kRori:    GenerateRori    (interp, ctx, instr, pc); break;
     case Opcode::kAddi:    GenerateAddi    (interp, ctx, instr, pc); break;
+#if 0
     case Opcode::kStp:     GenerateStp     (interp, ctx, instr, pc); break;
+#endif
     case Opcode::kXor:     GenerateXor     (interp, ctx, instr, pc); break;
     case Opcode::kMovn:    GenerateMovn    (interp, ctx, instr, pc); break;
+#if 0
     case Opcode::kSsat:    GenerateSsat    (interp, ctx, instr, pc); break;
 #endif
     case Opcode::kAdd:     GenerateAdd     (interp, ctx, instr, pc); break;
-#if 0
     case Opcode::kCls:     GenerateCls     (interp, ctx, instr, pc); break;
-#endif
     case Opcode::kLi:      GenerateLi      (interp, ctx, instr, pc); break;
     case Opcode::kUnknown:
     default:
