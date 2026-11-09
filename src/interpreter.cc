@@ -51,47 +51,9 @@ int ExecuteProgram (const std::string& file_path)
 
     interpreter.cpu_.SetProgramCounter (entry_addr);
 
-    ir_ctx ctx;
-
-    ir_consistency_check ();
-
-    ir_init (&ctx, IR_FUNCTION | IR_OPT_FOLDING,
-             IR_CONSTS_LIMIT_MIN, IR_INSNS_LIMIT_MIN);
-
     try
     {
     while (true) {
-#if 0
-        LOG_TRACE_("Translating ADD");
-
-        interpreter.cpu_.SetRegValue (GPR::kX0, 10);
-        interpreter.cpu_.SetRegValue (GPR::kX1, 20);
-        interpreter.cpu_.SetRegValue (GPR::kX2, 5);
-
-        GenerateAdd (interpreter, &ctx, {
-            .opcode_ = Opcode::kAdd,
-            .reg1_ = GPR::kX0,
-            .reg2_ = GPR::kX1,
-            .reg3_ = GPR::kX2
-            });
-
-        std::size_t size{};
-
-        void* entry = ir_jit_compile (&ctx, kOptimizationLevel, &size);
-
-        if (entry) {
-            reinterpret_cast<FuncExecuteTranslatedInstr> (entry) ();
-        }
-
-        LOG_TRACE_("Result of ADD\n"
-                    "X0 = {}\nX1 = {}\nX2 = {}\n",
-                    interpreter.cpu_.GetRegValue(GPR::kX0),
-                    interpreter.cpu_.GetRegValue(GPR::kX1),
-                    interpreter.cpu_.GetRegValue(GPR::kX2));
-
-        break;
-#endif
-#if 1
         BasicBlock      bb_block{};
         BlockTranslated bt_block{};
 
@@ -151,19 +113,14 @@ int ExecuteProgram (const std::string& file_path)
         interpreter.bb_cache_.Add (instr, pc);
 
         interpreter.cpu_.Execute (instr, interpreter.ram_);
-#endif
     }
     }
     catch (const GuestExit& exit)
     {
         LOG_TRACE_("Exiting normally... ");
 
-        ir_free (&ctx);
-
         return exit.GetExitCode ();
     }
-
-    ir_free (&ctx);
 
     return EXIT_SUCCESS;
 }
