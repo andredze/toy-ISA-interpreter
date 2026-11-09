@@ -37,8 +37,8 @@ enum class GPR : std::uint8_t
     kX6, // arg5
     kX7, // arg6
     kX8, // syscall number
-    kX9,  kX10, kX11, kX12, 
-    kX13, kX14, kX15, kX16, 
+    kX9,  kX10, kX11, kX12,
+    kX13, kX14, kX15, kX16,
     kX17, kX18, kX19, kX20,
     kX21, kX22, kX23, kX24,
     kX25, kX26, kX27, kX28,
@@ -80,7 +80,7 @@ enum class Opcode : std::uint8_t
 enum class BinaryOpcodeHighBits : std::uint8_t
 {
     kUnknown = 0b000000,
-    
+
     kJ    = 0b001111,
     kSsat = 0b010010,
     kAddi = 0b010111,
@@ -97,7 +97,7 @@ enum class BinaryOpcodeHighBits : std::uint8_t
 enum class BinaryOpcodeLowBits : std::uint8_t
 {
     kUnknown = 0b000000,
-    
+
     kSyscall = 0b001101,
     kMovn    = 0b011001,
     kAdd     = 0b011011,
@@ -116,7 +116,7 @@ struct FieldLocation
 
 //==================================================
 
-uint8_t GetFieldWidth (FieldLocation location);
+constexpr uint8_t GetFieldWidth (FieldLocation location);
 
 //==================================================
 
@@ -136,7 +136,7 @@ constexpr FieldLocation kMovnZeroFieldLocation         = {6, 10};
 constexpr FieldLocation kAddZeroFieldLocation          = {6, 10};
 constexpr FieldLocation kClsZeroFieldLocation          = {6, 15};
 constexpr FieldLocation kLiZeroFieldLocation           = {21, 25};
- 
+
 constexpr FieldLocation kStImmediateFieldLocation      = {0, 13};
 constexpr FieldLocation kLdImmediateFieldLocation      = {0, 13};
 constexpr FieldLocation kAddiImmediateFieldLocation    = {0, 15};

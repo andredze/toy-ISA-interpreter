@@ -3,7 +3,6 @@
 //————————————————————————————————————————————————————————————————————————————————
 
 #include "decode.hpp"
-#include <vector>
 #include <unordered_map>
 
 //————————————————————————————————————————————————————————————————————————————————
@@ -13,29 +12,34 @@ namespace toy_isa_interpreter
 
 //————————————————————————————————————————————————————————————————————————————————
 
-using BasicBlock = std::vector<Instruction>;
+using TranslatedFunc = void (*) ();
+
+//————————————————————————————————————————————————————————————————————————————————
+
+struct BlockTranslated
+{
+    TranslatedFunc entry_;
+    std::size_t    size_;
+};
 
 //==================================================
 
-constexpr PCValue kPCInvalidState = static_cast<PCValue>(-1);
-
-//==================================================
-
-class Cache
+class BTCache
 {
 private:
-    using BBCache = std::unordered_map<PCValue, BasicBlock>;
+    using BTCacheMap = std::unordered_map<PCValue, BlockTranslated>;
 
-    BBCache map_;
-
-    PCValue cur_bb_key_ = kPCInvalidState;
+    BTCacheMap map_;
 
 public:
-    Cache () {}
+    std::size_t GetSize () const
+    {
+        return map_.size ();
+    }
 
-    bool Prefetch (PCValue pc, BasicBlock& dest);
+    bool Lookup (PCValue pc, BlockTranslated& dest);
 
-    void Add (Instruction& decoded_instr, PCValue pc);
+    void Add (PCValue pc, BlockTranslated& block);
 };
 
 //--------------------------------------------------------------------------------

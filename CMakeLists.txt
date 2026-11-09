@@ -99,7 +99,8 @@ set (CXX_SRC
         src/decode.cc
         src/binary_code_input.cc
         src/interpreter.cc
-        src/cache.cc
+        src/bb_cache.cc
+        src/bt_cache.cc
         src/elf_loader.cc
         src/translator.cc
 )

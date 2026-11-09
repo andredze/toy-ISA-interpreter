@@ -16,6 +16,11 @@ using Word = std::uint32_t;
 using Byte = std::uint8_t;
 
 constexpr int kOptimizationLevel = 2;
+constexpr int kBBTranslationThreshold = 1;
+
+constexpr std::string_view kDotDir = "dot";
+constexpr std::string_view kSvgDir = "svg";
+constexpr std::string_view kDotFileName = "bt";
 
 constexpr std::size_t kWordSizeInBits = sizeof(Word) * 8;
 

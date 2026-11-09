@@ -37,13 +37,13 @@ std::string GetStringOpcode (Opcode opcode)
     case Opcode::kAdd:     return "ADD";
     case Opcode::kCls:     return "CLS";
     case Opcode::kLi:      return "LI";
-    
+
     case Opcode::kUnknown:
     default:
         return "UNKNOWN";
     }
 
-    return "UNKNOWN";    
+    return "UNKNOWN";
 }
 
 //————————————————————————————————————————————————————————————————————————————————
@@ -119,13 +119,13 @@ static enum Opcode GetOpcode (Word encoding)
         opcode = GetOpcodeFromLowBits (low_opcode_bits);
 
         LOG_TRACE_("Decode opcode {} from low bits {:06b} encoding {:032b}",
-                    GetStringOpcode (opcode), low_opcode_bits, encoding);    
+                    GetStringOpcode (opcode), low_opcode_bits, encoding);
     }
     else {
         opcode = GetOpcodeFromHighBits (high_opcode_bits);
 
         LOG_TRACE_("Decode opcode {} from high bits {:06b} encoding {:032b}",
-                    GetStringOpcode (opcode), high_opcode_bits, encoding);    
+                    GetStringOpcode (opcode), high_opcode_bits, encoding);
     }
 
     return opcode;
@@ -133,7 +133,7 @@ static enum Opcode GetOpcode (Word encoding)
 
 //--------------------------------------------------------------------------------
 
-uint8_t GetFieldWidth (FieldLocation location)
+constexpr uint8_t GetFieldWidth (FieldLocation location)
 {
     return location.end_pos_ - location.start_pos_ + 1u;
 }
@@ -222,9 +222,9 @@ Instruction CpuState::Decode (Word encoding) const
 
     case Opcode::kBext:
         EnsureFieldIsZero (encoding, kBextZeroFieldLocation);
-        instr.reg1_ = GetFirstFieldReg  (encoding); 
-        instr.reg2_ = GetSecondFieldReg (encoding); 
-        instr.reg3_ = GetThirdFieldReg  (encoding); 
+        instr.reg1_ = GetFirstFieldReg  (encoding);
+        instr.reg2_ = GetSecondFieldReg (encoding);
+        instr.reg3_ = GetThirdFieldReg  (encoding);
         break;
 
     case Opcode::kLd:

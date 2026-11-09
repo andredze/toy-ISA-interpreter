@@ -11,7 +11,7 @@
 #include "logger.hpp"
 #include "decode.hpp"
 #include "memory.hpp"
-#include "cache.hpp"
+#include "bb_cache.hpp"
 
 //--------------------------------------------------------------------------------
 
@@ -50,6 +50,10 @@ public:
         return *(Word*)(buffer_ + program_counter);
     }
 };
+
+//--------------------------------------------------------------------------------
+
+GPRValue SignExtend (GPRValue source, uint8_t width);
 
 //--------------------------------------------------------------------------------
 
@@ -100,6 +104,11 @@ public:
     PCValue GetProgramCounter () const
     {
         return program_counter_;
+    }
+
+    PCValue* GetProgramCounterPointer ()
+    {
+        return &program_counter_;
     }
 
     void SetRegValue (GPR reg, GPRValue value)

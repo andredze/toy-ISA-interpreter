@@ -15,35 +15,35 @@ std::string CpuState::GetStringReg (GPR reg) const
     switch (reg)
     {
     case GPR::kX0:  return "X0 (ret val)";
-    case GPR::kX1:  return "X1 (arg0)"; 
-    case GPR::kX2:  return "X2 (arg1)"; 
-    case GPR::kX3:  return "X3 (arg2)"; 
-    case GPR::kX4:  return "X4 (arg3)"; 
-    case GPR::kX5:  return "X5 (arg4)"; 
-    case GPR::kX6:  return "X6 (arg5)"; 
-    case GPR::kX7:  return "X7 (arg6)"; 
+    case GPR::kX1:  return "X1 (arg0)";
+    case GPR::kX2:  return "X2 (arg1)";
+    case GPR::kX3:  return "X3 (arg2)";
+    case GPR::kX4:  return "X4 (arg3)";
+    case GPR::kX5:  return "X5 (arg4)";
+    case GPR::kX6:  return "X6 (arg5)";
+    case GPR::kX7:  return "X7 (arg6)";
     case GPR::kX8:  return "X8 (syscall number)";
-    case GPR::kX9:  return "X9";  
-    case GPR::kX10: return "X10"; 
+    case GPR::kX9:  return "X9";
+    case GPR::kX10: return "X10";
     case GPR::kX11: return "X11";
-    case GPR::kX12: return "X12"; 
-    case GPR::kX13: return "X13"; 
+    case GPR::kX12: return "X12";
+    case GPR::kX13: return "X13";
     case GPR::kX14: return "X14";
     case GPR::kX15: return "X15";
-    case GPR::kX16: return "X16"; 
-    case GPR::kX17: return "X17"; 
+    case GPR::kX16: return "X16";
+    case GPR::kX17: return "X17";
     case GPR::kX18: return "X18";
     case GPR::kX19: return "X19";
     case GPR::kX20: return "X20";
-    case GPR::kX21: return "X21"; 
+    case GPR::kX21: return "X21";
     case GPR::kX22: return "X22";
     case GPR::kX23: return "X23";
     case GPR::kX24: return "X24";
-    case GPR::kX25: return "X25"; 
+    case GPR::kX25: return "X25";
     case GPR::kX26: return "X26";
     case GPR::kX27: return "X27";
     case GPR::kX28: return "X28";
-    case GPR::kX29: return "X29"; 
+    case GPR::kX29: return "X29";
     case GPR::kX30: return "X30";
     case GPR::kX31: return "X31 (LR)";
     case GPR::kUnknown:
@@ -58,7 +58,7 @@ std::string CpuState::GetStringReg (GPR reg) const
 
 void CpuState::AdvanceProgramCounter ()
 {
-    LOG_TRACE_("Advancing PC: PC = {} + 4 = {}", 
+    LOG_TRACE_("Advancing PC: PC = {} + 4 = {}",
                 program_counter_, program_counter_ + 4u);
 
     program_counter_ += 4u;
@@ -68,12 +68,12 @@ void CpuState::AdvanceProgramCounter ()
 
 static GPRValue GetBit (GPRValue value, int bit_index)
 {
-    return (value >> bit_index) & 1;    
+    return (value >> bit_index) & 1;
 }
 
 //==================================================
 
-static GPRValue SignExtend (GPRValue source, uint8_t width)
+GPRValue SignExtend (GPRValue source, uint8_t width)
 {
     GPRValue result = 0;
 
@@ -166,7 +166,7 @@ void CpuState::ExecuteBext (Instruction instr)
     auto mask = GetRegValue (reg_mask);
 
     GPRValue packed_bits = 0u;
-    
+
     for (int bit_index = kRegLengthInBits - 1; bit_index >= 0; bit_index--) {
         if (GetBit (mask, bit_index) == 1u) {
             packed_bits <<= 1;
@@ -209,7 +209,7 @@ void CpuState::ExecuteLd (Instruction instr, RAM& ram)
     auto imm = static_cast<GPRValue>(instr.imm_);
 
     auto addr = static_cast<Word> (
-                GetRegValue (reg_base) + 
+                GetRegValue (reg_base) +
                 SignExtend  (imm, GetFieldWidth (kLdImmediateFieldLocation)));
 
     if (!ram.IsAligned (addr)) {
@@ -217,7 +217,7 @@ void CpuState::ExecuteLd (Instruction instr, RAM& ram)
     }
 
     GPRValue result = ram.LoadWord (addr);
-    
+
     SetRegValue (reg_dest, result);
 
     AdvanceProgramCounter ();
@@ -238,7 +238,7 @@ void CpuState::ExecuteSt (Instruction instr, RAM& ram)
     auto imm = static_cast<GPRValue>(instr.imm_);
 
     auto addr = static_cast<Word> (
-                GetRegValue (reg_base) + 
+                GetRegValue (reg_base) +
                 SignExtend  (imm, GetFieldWidth (kStImmediateFieldLocation)));
 
     if (!ram.IsAligned (addr)) {
@@ -324,7 +324,7 @@ void CpuState::ExecuteJ (Instruction instr)
 //--------------------------------------------------------------------------------
 
 void CpuState::ExecuteRori (Instruction instr)
-{   
+{
     // X[reg1] ← rotate_right(X[reg2], imm5)
 
     GPR reg_result = instr.reg1_;
@@ -334,9 +334,9 @@ void CpuState::ExecuteRori (Instruction instr)
 
     auto rotate_count = instr.imm_;
 
-    auto result = (value >> rotate_count) | 
+    auto result = (value >> rotate_count) |
                   (value << (kRegLengthInBits - rotate_count));
-    
+
     SetRegValue (reg_result, result);
 
     LOG_TRACE_(
@@ -356,7 +356,7 @@ void CpuState::ExecuteRori (Instruction instr)
 //--------------------------------------------------------------------------------
 
 void CpuState::ExecuteAddi (Instruction instr)
-{   
+{
     // X[reg2] ← X[reg1] + sign_extend(imm)
 
     GPR reg_result = instr.reg2_;
@@ -366,8 +366,8 @@ void CpuState::ExecuteAddi (Instruction instr)
 
     auto imm = static_cast<GPRValue>(instr.imm_);
 
-    auto sign_extended = SignExtend (imm, GetFieldWidth (kAddiImmediateFieldLocation));    
-   
+    auto sign_extended = SignExtend (imm, GetFieldWidth (kAddiImmediateFieldLocation));
+
     auto result = value1 + sign_extended;
 
     SetRegValue (reg_result, result);
@@ -406,7 +406,7 @@ void CpuState::ExecuteStp (Instruction instr, RAM& ram)
     auto offset   = static_cast<GPRValue>(instr.imm_);
 
     auto addr = static_cast<Word> (
-                GetRegValue (reg_base) + 
+                GetRegValue (reg_base) +
                 SignExtend  (offset, GetFieldWidth (kStpOffsetFieldLocation)));
 
     if (!ram.IsAligned (addr)) {
@@ -493,7 +493,7 @@ void CpuState::ExecuteSsat (Instruction instr)
 
     GPR reg_value  = instr.reg2_;
     GPR reg_result = instr.reg1_;
-    
+
     auto bits_count = instr.imm_;
 
     auto max_value = (1 << (bits_count - 1)) - 1;

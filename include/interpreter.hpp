@@ -4,6 +4,8 @@
 
 #include "cpu.hpp"
 #include "memory.hpp"
+#include "bb_cache.hpp"
+#include "bt_cache.hpp"
 
 //--------------------------------------------------------------------------------
 
@@ -15,7 +17,8 @@ class Interpreter
 public:
     CpuState cpu_;
     RAM      ram_;
-    Cache    cache_;
+    BBCache  bb_cache_;
+    BTCache  bt_cache_;
 
     Word Fetch ()
     {

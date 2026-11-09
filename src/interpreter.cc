@@ -7,7 +7,7 @@
 #include "translator.hpp"
 #include "elf_loader.hpp"
 #include "memory.hpp"
-#include "cache.hpp"
+#include "bb_cache.hpp"
 
 //————————————————————————————————————————————————————————————————————————————————
 
@@ -18,9 +18,9 @@ namespace toy_isa_interpreter
 
 void CpuState::ExecuteBasicBlock (BasicBlock block, RAM& ram)
 {
-    LOG_TRACE_("Executing BasicBlock with size = {}", block.size ());
+    LOG_TRACE_("Executing BasicBlock with size = {}", block.instrs_.size ());
 
-    for (auto instr : block) {
+    for (auto instr : block.instrs_) {
         LOG_TRACE_("BB executing {}", GetStringOpcode (instr.opcode_));
 
         Execute (instr, ram);
@@ -33,6 +33,14 @@ void CpuState::ExecuteBasicBlock (BasicBlock block, RAM& ram)
 
 int ExecuteProgram (const std::string& file_path)
 {
+#ifdef LOGGING
+    std::string command1 = std::format ("mkdir -p {}", kDotDir);
+    std::string command2 = std::format ("mkdir -p {}", kSvgDir);
+
+    system (command1.c_str ());
+    system (command2.c_str ());
+#endif
+
     Interpreter interpreter{};
 
     Word entry_addr{};
@@ -53,6 +61,7 @@ int ExecuteProgram (const std::string& file_path)
     try
     {
     while (true) {
+#if 0
         LOG_TRACE_("Translating ADD");
 
         interpreter.cpu_.SetRegValue (GPR::kX0, 10);
@@ -81,22 +90,55 @@ int ExecuteProgram (const std::string& file_path)
                     interpreter.cpu_.GetRegValue(GPR::kX2));
 
         break;
-#if 0
-        BasicBlock block{};
+#endif
+#if 1
+        BasicBlock      bb_block{};
+        BlockTranslated bt_block{};
 
         PCValue pc = interpreter.cpu_.GetProgramCounter ();
 
-        LOG_TRACE_("Trying to prefetch at {}", pc);
+        LOG_TRACE_("Trying to lookup BT at {}", pc);
 
-        if (interpreter.cache_.Prefetch (pc, block)) {
-            LOG_TRACE_("Prefetching Succeeded");
+        if (interpreter.bt_cache_.Lookup (pc, bt_block)) {
+            LOG_TRACE_("Hit in BTCache");
+            LOG_TRACE_("Executing BT block");
 
-            interpreter.cpu_.ExecuteBasicBlock (block, interpreter.ram_);
+            bt_block.entry_ ();
 
             continue;
         }
+        LOG_TRACE_("No BT hit");
 
-        LOG_TRACE_("Prefetching Failed");
+        LOG_TRACE_("Trying to lookup BB at {}", pc);
+
+        if (interpreter.bb_cache_.Lookup (pc, bb_block)) {
+            LOG_TRACE_("Hit in BBCache");
+            LOG_TRACE_("BB block exec_count = {}", bb_block.exec_count_);
+
+            if (bb_block.exec_count_ >= kBBTranslationThreshold) {
+                LOG_TRACE_("BB block exec_count reached threshold {}, translating...",
+                           kBBTranslationThreshold);
+
+                bt_block = TranslateBasicBlock (interpreter, bb_block, pc);
+                interpreter.bt_cache_.Add (pc, bt_block);
+
+                LOG_TRACE_("Cached BT, executing");
+                bt_block.entry_ ();
+            }
+            else {
+                LOG_TRACE_("Interpreting BB block");
+
+                interpreter.cpu_.ExecuteBasicBlock (bb_block, interpreter.ram_);
+
+                LOG_TRACE_("Incrementing exec_count {}",
+                           interpreter.bb_cache_.map_[pc].exec_count_);
+                // FIXME: not address cache second time
+                interpreter.bb_cache_.map_[pc].exec_count_++;
+            }
+
+            continue;
+        }
+        LOG_TRACE_("No BB hit");
         LOG_TRACE_("Fetching instruction...");
 
         Word encoding = interpreter.Fetch ();
@@ -106,7 +148,7 @@ int ExecuteProgram (const std::string& file_path)
 
         Instruction instr = interpreter.cpu_.Decode (encoding);
 
-        interpreter.cache_.Add (instr, pc);
+        interpreter.bb_cache_.Add (instr, pc);
 
         interpreter.cpu_.Execute (instr, interpreter.ram_);
 #endif
