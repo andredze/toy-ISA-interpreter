@@ -59,7 +59,15 @@ BlockTranslated TranslateBasicBlock (Interpreter& interp, BasicBlock& basic_bloc
     ir_init (&ctx, IR_FUNCTION | IR_OPT_FOLDING,
              IR_CONSTS_LIMIT_MIN, IR_INSNS_LIMIT_MIN);
 
-    GenerateBasicBlock (interp, &ctx, basic_block, pc);
+    try
+    {
+        GenerateBasicBlock (interp, &ctx, basic_block, pc);
+    }
+    catch (const std::exception& except)
+    {
+        ir_free (&ctx);
+        throw;
+    }
 
     std::size_t code_size;
 
